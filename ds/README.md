@@ -1,4 +1,4 @@
-# clone project
+# Clone project
 
 
 `be :`
