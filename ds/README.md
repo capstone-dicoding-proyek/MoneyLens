@@ -1,7 +1,7 @@
 # Clone project
 
 
-`be :`
+`DS :`
 ```
 git clone --filter=blob:none --no-checkout https://github.com/capstone-dicoding-proyek/MoneyLens.git
 
