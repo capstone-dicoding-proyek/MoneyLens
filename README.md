@@ -11,3 +11,12 @@ git checkout main
 git pull main
 git checkout -b <nama-fitur>
 ```
+
+`📄 README folder DS:`
+https://github.com/capstone-dicoding-proyek/MoneyLens/blob/main/ds/README.md
+
+`📄 README folder FS:`
+https://github.com/capstone-dicoding-proyek/MoneyLens/blob/main/fs/README.md
+
+`📄 README folder AI:`
+https://github.com/capstone-dicoding-proyek/MoneyLens/blob/main/ai/README.md
