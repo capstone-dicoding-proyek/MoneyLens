@@ -9,7 +9,7 @@ cd MoneyLens
 
 git sparse-checkout init --cone
 
-git sparse-checkout set be
+git sparse-checkout set ./fs/fe
 ```
 
 `fe :`
@@ -21,7 +21,7 @@ cd MoneyLens
 
 git sparse-checkout init --cone
 
-git sparse-checkout set fe
+git sparse-checkout set ./fs/fe
 ```
 
 ## Init project
