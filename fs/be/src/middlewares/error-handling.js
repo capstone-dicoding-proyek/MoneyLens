@@ -1,5 +1,5 @@
-import { response } from 'express';
-import { ClientError } from '../exceptions/client-error';
+import { ClientError } from '../exceptions/client-error.js';
+import response from '../utils/response.js';
 
 // eslint-disable-next-line no-unused-vars
 const ErrorHandler = (err, req, res, next) => {

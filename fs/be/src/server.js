@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
+import './databases/cron-db.js';
 import morgan from 'morgan';
 import cors from 'cors';
-import ErrorHandler from './middlewares/error-handling';
-import Routers from './routes';
+import ErrorHandler from './middlewares/error-handling.js';
+import Routers from './routes.js';
 
 const app = express();
 app.use(morgan('dev'));
