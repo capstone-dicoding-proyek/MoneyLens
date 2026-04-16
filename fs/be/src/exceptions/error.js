@@ -1,4 +1,4 @@
-import { ClientError } from './ClientError.js';
+import { ClientError } from './client-error.js';
 
 
 class NotFoundError extends ClientError {
