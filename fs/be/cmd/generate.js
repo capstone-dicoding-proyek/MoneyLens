@@ -49,7 +49,7 @@ if (withValidator) {
 createFile(
   path.join(repoDir, `${moduleName}.repository.js`),
   `
-import DatabasePool from '../../../database-pool.js';
+import DatabasePool from '../../../databases/database-pool.js';
 export class ${capitalize(moduleName)}Repository extends DatabasePool {
   
 
