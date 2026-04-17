@@ -5,6 +5,16 @@ const db =new DatabasePool;
 cron.schedule('*/5 * * * *', async () => {
   await db.pool.query(`
     DELETE FROM verifikasi_email
-    WHERE "expiredAt" < NOW()
+    WHERE "expired_at" < NOW()
   `);
+});
+
+
+cron.schedule('*/5 * * * *', async () => {
+  await db.pool.query(`
+      DELETE FROM authentications
+      WHERE expired_at < NOW()
+      RETURNING id
+    `);
+
 });

@@ -12,7 +12,7 @@ class MailSender {
   }
 
   sendEmail(targetEmail, token) {
-    const verifyUrl = `${process.env.BASE_URL}/verify-email?token=${token}`;
+    const verifyUrl = `http://${process.env.HOSTFE}:${process.env.PORTFE}/verify-email?token=${token}`;
     const message = {
       from: 'no-repy@hello.com',
       to: targetEmail,

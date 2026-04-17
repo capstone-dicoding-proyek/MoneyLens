@@ -13,7 +13,7 @@ export class UsersRepository extends DatabasePool {
     };
 
     const result = await this.pool.query(query);
-    return result.rows;
+    return result.rows[0];
   }
   async verifyNewEmail(email) {
 
@@ -25,6 +25,25 @@ export class UsersRepository extends DatabasePool {
     const result = await this.pool.query(query);
 
     return result.rows.length > 0;
+  }
+
+  async updateVerifiedEmail(userID) {
+    const query = {
+      text: 'UPDATE users SET verified_email = $1 WHERE id = $2',
+      values: [true, userID]
+    };
+
+    const result = await this.pool.query(query);
+
+    return result.rowCount > 0;
+  }
+  async findUser(id){
+    const query = {
+      text: 'SELECT * FROM users WHERE id = $1',
+      values: [id]
+    };
+    const result = await this.pool.query(query);
+    return result.rows[0];
   }
 
 }
