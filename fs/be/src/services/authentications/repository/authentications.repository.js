@@ -41,11 +41,11 @@ export class AuthenticationsRepository extends DatabasePool {
 
   }
 
-  async verifyUserCredential({ username, password }) {
+  async verifyUserCredential({ email, password }) {
 
     const query = {
-      text: 'SELECT id,password FROM users WHERE username = $1',
-      values: [username]
+      text: 'SELECT id,password FROM users WHERE email = $1',
+      values: [email]
     };
     const result = await this.pool.query(query);
     const user = result.rows[0];
