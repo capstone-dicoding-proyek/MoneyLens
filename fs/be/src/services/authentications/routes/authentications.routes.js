@@ -21,4 +21,6 @@ router.delete('/auth', validate(authenticationPayloadValidatorDelete), logout);
 router.post('/auth/reset-password', validate(resendResetTokenPasswordPayloadValidatorPost), resendLimiter, sendResetPassword);
 
 
+
+
 export default router;
