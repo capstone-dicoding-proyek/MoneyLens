@@ -57,7 +57,7 @@ export const login = async (req, res, next) => {
   const accessToken = TokenManager.generateAccessToken({ id: result.id });
   const refreshToken = TokenManager.generateRefreshToken({ id: result.id });
   await authenticationsRepository.addRefreshToken({ userID:result.id, token:refreshToken });
-  return response(res, 201, 'Authentication berhasil ditambahkan', {
+  return response(res, 200, 'Login berhasil', {
     accessToken,
     refreshToken,
   });
@@ -104,4 +104,5 @@ export const sendResetPassword = async (req, res, next) => {
 
   return response(res, 200, 'Jika email terdaftar, link reset akan dikirim');
 };
+
 

@@ -47,7 +47,7 @@ export class UsersRepository extends DatabasePool {
   }
   async findByEmail(email){
     const query = {
-      text: 'SELECT id FROM users WHERE email = $1',
+      text: 'SELECT * FROM users WHERE email = $1',
       values: [email]
     };
     const result = await this.pool.query(query);
@@ -63,6 +63,14 @@ export class UsersRepository extends DatabasePool {
     await this.pool.query(query);
   }
 
+  async linkGoogleAccount({ userID, googleID }){
+    const query = {
+      text: 'UPDATE users SET google_id = $1 WHERE id = $2 ',
+      values: [googleID, userID]
+    };
+    await this.pool.query(query);
+
+  }
 
 }
 export default UsersRepository;

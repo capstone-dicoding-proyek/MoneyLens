@@ -1,10 +1,14 @@
+import { Route, Routes } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
 
 function App() {
 
   return (
-    <>
-      <h1 className="text-8xl transform -translate-x-1/2 top-1/2 left-1/2 absolute">Hello world</h1>
-    </>
+    <main className=''>
+      <Routes>
+        <Route path='*' element={<LoginPage />} />
+      </Routes>
+    </main>
   );
 }
 
