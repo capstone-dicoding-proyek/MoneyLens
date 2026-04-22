@@ -16,3 +16,7 @@ export const authenticationPayloadValidatorPut = Joi.object({
 export const authenticationPayloadValidatorDelete = Joi.object({
   refreshToken: Joi.string().required(),
 });
+
+export const resendResetTokenPasswordPayloadValidatorPost = Joi.object({
+  email: Joi.string().email().required(),
+});

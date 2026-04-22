@@ -9,6 +9,13 @@ cron.schedule('*/5 * * * *', async () => {
   `);
 });
 
+cron.schedule('*/5 * * * *', async () => {
+  await db.pool.query(`
+    DELETE FROM reset_password
+    WHERE "expired_at" < NOW()
+  `);
+});
+
 
 cron.schedule('*/5 * * * *', async () => {
   await db.pool.query(`

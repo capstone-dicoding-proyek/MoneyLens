@@ -85,5 +85,49 @@ export class AuthenticationsRepository extends DatabasePool {
 
     return result.rows[0];
   }
+
+  async createResetTokenPassword(id) {
+    const token = `token-reset-password-user-${nanoid()}`;
+    const query = {
+      text:  'INSERT INTO reset_password (id, user_id, token) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET token = EXCLUDED.token RETURNING token',
+      values: [`verif-${nanoid()}`, id, token]
+    };
+
+    const result = await this.pool.query(query);
+    return result.rows[0].token;
+  }
+
+  async deleteResetTokenPassword(token) {
+    const query = {
+      text: 'DELETE FROM reset_password WHERE token = $1',
+      values: [token]
+    };
+    await this.pool.query(query);
+  }
+
+
+  async verifyResetTokenCredentialPassword(token) {
+
+    const query = {
+      text: 'SELECT user_id FROM reset_password WHERE token = $1 AND "expired_at" > NOW()',
+      values: [token]
+    };
+    const result = await this.pool.query(query);
+    console.log(result.rows[0]);
+    if (!result.rowCount) {
+      throw new InvariantError('Token tidak valid atau expired');
+    }
+
+    return result.rows[0].user_id;
+
+  }
+
+  async deleteAllRefreshToken(id) {
+    const query = {
+      text: 'DELETE FROM authentications WHERE user_id = $1',
+      values: [id],
+    };
+    await this.pool.query(query);
+  }
 }
 export default AuthenticationsRepository;

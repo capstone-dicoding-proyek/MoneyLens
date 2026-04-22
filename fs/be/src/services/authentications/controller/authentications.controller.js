@@ -40,7 +40,7 @@ export const resendVerifyEmail = async (req, res, next) => {
 
   const token = await authenticationsRepository.createVerifyTokenEmail(id);
 
-  await mailSender.sendEmail(user.email, token);
+  await mailSender.sendEmail({ subject:'Verifikasi email', targetEmail:user.email, token,  url:'/auth/verify-email' });
 
   return response(res, 200, 'Verifikasi email dikirim');
 };
@@ -87,5 +87,21 @@ export const logout = async (req, res, next) => {
   await authenticationsRepository.deleteRefreshToken(refreshToken);
 
   return response(res, 200, 'Refresh token berhasil dihapus');
+};
+
+
+
+// eslint-disable-next-line no-unused-vars
+export const sendResetPassword = async (req, res, next) => {
+  const { email } = req.validated;
+
+  const user = await usersRepository.findByEmail(email);
+
+  if (user){
+    const token = await authenticationsRepository.createResetTokenPassword(user.id);
+    await mailSender.sendEmail({ subject:'Reset password', targetEmail:email, token,  url:'/auth/verif-reset-token' });
+  };
+
+  return response(res, 200, 'Jika email terdaftar, link reset akan dikirim');
 };
 

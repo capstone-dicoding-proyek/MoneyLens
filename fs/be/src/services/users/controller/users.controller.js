@@ -21,7 +21,7 @@ export const registerUser = async (req, res, next) => {
     return next(new InvariantError('User gagal ditambahkan'));
   }
   const token = await authenticationsRepository.createVerifyTokenEmail(result.id);
-  await mailSender.sendEmail(result.email, token);
+  await mailSender.sendEmail({ subject:'Verifikasi email', targetEmail:result.email, token,  url:'/auth/verify-email' });
 
   const accessToken = TokenManager.generateAccessToken({ id: result.id });
   const refreshToken = TokenManager.generateRefreshToken({ id: result.id });
@@ -32,4 +32,19 @@ export const registerUser = async (req, res, next) => {
     accessToken,
     refreshToken,
   });
+};
+
+// eslint-disable-next-line no-unused-vars
+export const resetPassword = async (req, res, next) => {
+  const { token, password } = req.validated;
+
+  const userID = await authenticationsRepository.verifyResetTokenCredentialPassword(token);
+
+  await usersRepository.resetPassword({ password, userID });
+
+  await authenticationsRepository.deleteResetTokenPassword(token);
+
+  await authenticationsRepository.deleteAllRefreshToken(userID);
+
+  return response(res, 200, 'Reset password berhasil');
 };
