@@ -11,13 +11,13 @@ class MailSender {
     });
   }
 
-  sendEmail(targetEmail, token) {
-    const verifyUrl = `http://${process.env.HOSTFE}:${process.env.PORTFE}/auth/verify-email?token=${token}`;
+  sendEmail({ targetEmail, token, url, subject }) {
+    const verifyUrl = `http://${process.env.HOSTFE}:${process.env.PORTFE}${url}?token=${token}`;
     const message = {
       from: 'no-repy@hello.com',
       to: targetEmail,
-      subject: 'Verifikasi Email',
-      text: `Verifikasi email kamu: ${verifyUrl}\n\nBerlaku 30 menit.`,
+      subject: subject,
+      text: `${subject} kamu: ${verifyUrl}\n\nBerlaku 30 menit.`,
       html: `
       <p>Klik tautan berikut untuk verifikasi akun kamu:</p>
       <a href="${verifyUrl}">${verifyUrl}</a>

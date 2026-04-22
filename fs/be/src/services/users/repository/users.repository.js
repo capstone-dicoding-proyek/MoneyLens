@@ -45,6 +45,24 @@ export class UsersRepository extends DatabasePool {
     const result = await this.pool.query(query);
     return result.rows[0];
   }
+  async findByEmail(email){
+    const query = {
+      text: 'SELECT id FROM users WHERE email = $1',
+      values: [email]
+    };
+    const result = await this.pool.query(query);
+    return result.rows[0];
+  }
+
+  async resetPassword({ password, userID }){
+    password = await bcrypt.hash(password, 10);
+    const query = {
+      text: 'UPDATE users SET password = $1 WHERE id = $2 ',
+      values: [password, userID]
+    };
+    await this.pool.query(query);
+  }
+
 
 }
 export default UsersRepository;
