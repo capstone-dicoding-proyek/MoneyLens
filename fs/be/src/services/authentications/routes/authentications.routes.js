@@ -1,7 +1,7 @@
 import express from 'express';
 import { addRefreshToken, login, logout, resendVerifyEmail, sendResetPassword, verifyEmail } from '../controller/authentications.controller.js';
 import authenticateToken from '../../../middlewares/authenticate-token.js';
-import { resendLimiter } from '../../../middlewares/rate-limiter.js';
+import { resendLimiter, resetPasswordLimiter } from '../../../middlewares/rate-limiter.js';
 import validate from '../../../middlewares/validate.js';
 import { authenticationPayloadValidatorDelete, authenticationPayloadValidatorPost, authenticationPayloadValidatorPut, resendResetTokenPasswordPayloadValidatorPost, tokenValidator } from '../validator/authentications.validator.js';
 
@@ -18,7 +18,7 @@ router.put('/auth', validate(authenticationPayloadValidatorPut), addRefreshToken
 
 router.delete('/auth', validate(authenticationPayloadValidatorDelete), logout);
 
-router.post('/auth/reset-password', validate(resendResetTokenPasswordPayloadValidatorPost), resendLimiter, sendResetPassword);
+router.post('/auth/reset-password', validate(resendResetTokenPasswordPayloadValidatorPost), resetPasswordLimiter, sendResetPassword);
 
 
 
