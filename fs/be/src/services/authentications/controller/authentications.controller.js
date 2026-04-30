@@ -96,11 +96,15 @@ export const sendResetPassword = async (req, res, next) => {
   const { email } = req.validated;
 
   const user = await usersRepository.findByEmail(email);
-
-  if (user){
+  if (user && (!user.google_id || user.password)) {
     const token = await authenticationsRepository.createResetTokenPassword(user.id);
-    await mailSender.sendEmail({ subject:'Reset password', targetEmail:email, token,  url:'/auth/verif-reset-token' });
-  };
+    await mailSender.sendEmail({
+      subject: 'Reset password',
+      targetEmail: email,
+      token,
+      url: '/auth/verif-reset-token',
+    });
+  }
 
   return response(res, 200, 'Jika email terdaftar, link reset akan dikirim');
 };

@@ -1,5 +1,5 @@
 import { OAuth2Client } from 'google-auth-library';
-import { InvariantError } from '../../../exceptions/error.js';
+import { ForbiddenError, InvariantError, NotFoundError } from '../../../exceptions/error.js';
 import TokenManager from '../../../security/token-manager.js';
 import MailSender from '../../../utils/mail-sender.js';
 import response from '../../../utils/response.js';
@@ -36,11 +36,19 @@ export const registerUser = async (req, res, next) => {
   });
 };
 
-// eslint-disable-next-line no-unused-vars
 export const resetPassword = async (req, res, next) => {
   const { token, password } = req.validated;
 
   const userID = await authenticationsRepository.verifyResetTokenCredentialPassword(token);
+
+  const user = await usersRepository.findUser(userID);
+  if (!user) {
+    return next(new NotFoundError('User tidak ditemukan'));
+  }
+
+  if (user.google_id && !user.password) {
+    return next(new ForbiddenError('Silakan login dengan Google'));
+  }
 
   await usersRepository.resetPassword({ password, userID });
 
@@ -92,4 +100,14 @@ export const loginWithGoogle = async (req, res, next) => {
     accessToken,
     refreshToken,
   });
+};
+
+
+// eslint-disable-next-line no-unused-vars
+export const getUserLogged = async (req, res, next) => {
+  const { id } = req.user;
+  const result = await usersRepository.findUser(id);
+  // eslint-disable-next-line no-unused-vars
+  const { password, ...data } = result;
+  return response(res, 200, 'User logged success', { data });
 };
