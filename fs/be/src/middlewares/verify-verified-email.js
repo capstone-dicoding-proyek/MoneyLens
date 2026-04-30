@@ -1,4 +1,4 @@
-import { ForbiddenError } from '../exceptions/error';
+import { ForbiddenError } from '../exceptions/error.js';
 import UsersRepository from '../services/users/repository/users.repository.js';
 
 const usersRepository = new UsersRepository();

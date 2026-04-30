@@ -1,5 +1,5 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
-import response from '../utils/response';
+import response from '../utils/response.js';
 
 const createRateLimiter = ({
   prefix,
