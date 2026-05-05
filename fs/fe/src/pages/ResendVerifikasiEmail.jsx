@@ -5,6 +5,10 @@ import { resendVerifyEmail } from '../api/auth';
 import useAuth from '../hooks/useAuth';
 import { getRemainingCooldown, startCooldown } from '../utils/resend-cooldown';
 import { formatTime } from '../utils/format-time';
+import GreenRectangle from '../components/LoginPageComponent';
+import LayoutAuthComponent from '../components/LayoutAuthComponent';
+import FormAuthComponent from '../components/FormAuthComponent';
+import ButtonComponent from '../components/ButtonComponent';
 
 const RESEND_KEY = 'resend_email_end_time';
 const RESEND_COOLDOWN = 180;
@@ -66,19 +70,25 @@ export default function ResendVerifikasiEmailPage() {
   };
 
   return (
-    <section>
-      <h2>Verifikasi Email</h2>
-      <p>
-        Kami telah mengirim link verifikasi ke email kamu.
-        Cek inbox atau folder spam.
-      </p>
-      <button onClick={handleResend} disabled={count > 0 || isResending}>
-        {isResending
-          ? 'Mengirim...'
-          : count > 0
-            ? `Kirim ulang dalam ${formatTime(count)}`
-            : 'Kirim'}
-      </button>
-    </section>
+    <GreenRectangle>
+      <LayoutAuthComponent>
+        <FormAuthComponent >
+          <h2 className='font-bold text-primary text-5xl mt-14 max-sm:text-4xl'>Verifikasi Email</h2>
+          <p className='text-tthird font-light text-sm mt-8'>
+            Kami telah mengirim link verifikasi ke email kamu.
+            Cek inbox atau folder spam.
+          </p>
+          <ButtonComponent
+            onClick={handleResend}
+            title={isResending
+              ? 'Mengirim...'
+              : count > 0
+                ? `Kirim ulang dalam ${formatTime(count)}`
+                : 'Kirim'}
+            disabled={count > 0 || isResending}
+          />
+        </FormAuthComponent >
+      </LayoutAuthComponent >
+    </GreenRectangle>
   );
 }

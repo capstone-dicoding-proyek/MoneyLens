@@ -7,6 +7,7 @@ import { ToastProvider } from './contexts/ToastContext.jsx';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import  './api/axios-instance';
 
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>

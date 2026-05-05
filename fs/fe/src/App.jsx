@@ -6,11 +6,11 @@ import RegisterPage from './pages/RegisterPage';
 import NotFoundPage from './pages/NotFoundPage';
 import VerifikasiEmailPage from './pages/VerifikasiEmail';
 import ResendVerifikasiEmailPage from './pages/ResendVerifikasiEmail';
-import ResetPasswordPage from './pages/ResetPasswordPage';
 import NewPasswordPage from './pages/NewPasswordPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+
 
 function App() {
-
   return (
     <Routes>
       {/* Belum Login */}
@@ -20,7 +20,7 @@ function App() {
         <Route path="/auth/resend-verifikasi-email" element={<ResendVerifikasiEmailPage />} />
         <Route path="/auth/verify-email" element={<VerifikasiEmailPage />} />
         <Route path="/auth/verif-reset-token" element={<NewPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/reset-password" element={<ForgotPasswordPage />} />
       </Route>
 
       {/* Sudah Login */}

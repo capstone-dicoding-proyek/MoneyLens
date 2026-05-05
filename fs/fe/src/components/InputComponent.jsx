@@ -1,9 +1,31 @@
-export default function InputComponent({ toggle, onChangeToggle, type = 'text', placeholder, label, value, onChangeValue }) {
+export default function InputComponent({
+  toggle,
+  onChangeToggle,
+  type = 'text',
+  placeholder,
+  label,
+  value,
+  onChangeValue,
+  leftIcon: LeftIcon,
+  required= false,
+}) {
   return (
-    <div className='flex flex-col gap-2'>
-      {label ? <label className='font-semibold'>{label}</label> : null}
-      <div className='relative'>
-        <input type={type} className='w-full' placeholder={placeholder} value={value} onChange={(event) => onChangeValue(event.target.value)} />
+    <div className="flex flex-col gap-2">
+      {label && <label className="font-semibold">{label}</label>}
+
+      <div className="flex items-center border-b border-tthird pb-2 w-full relative">
+        {LeftIcon && (
+          <LeftIcon className="ml-2 mr-3 text-tthird text-xl" />
+        )}
+
+        <input
+          required={required}
+          type={type}
+          className="w-full focus:outline-none bg-transparent"
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChangeValue(e.target.value)}
+        />
         {toggle && (
           <div
             onClick={onChangeToggle}
