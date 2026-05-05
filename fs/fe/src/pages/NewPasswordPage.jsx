@@ -5,6 +5,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { resetPassword } from '../api/user';
 import FormAuthComponent from '../components/FormAuthComponent';
 import { useToast } from '../hooks/useToast';
+import { FaLock } from 'react-icons/fa';
+import GreenRectangle from '../components/LoginPageComponent';
+import LayoutAuthComponent from '../components/LayoutAuthComponent';
+import ButtonComponent from '../components/ButtonComponent';
 
 export default function NewPasswordPage() {
   const { addToast, removeToast } = useToast();
@@ -14,7 +18,7 @@ export default function NewPasswordPage() {
   const [password, onChangePassword] = useInputs();
   const navigate = useNavigate();
 
-  const onSendNewPassword = async () =>{
+  const onSendNewPassword = async () => {
     const loadingId = addToast('Sedang memproses...', { type: 'loading' });
     try {
       await resetPassword({ password, token });
@@ -32,16 +36,31 @@ export default function NewPasswordPage() {
   };
 
   return (
-    <section>
-      <FormAuthComponent buttonTitle="Submit" onClickButton={onSendNewPassword}>
-        <InputComponent label="Password"
-          placeholder='Silahkan masukkan password...'
-          toggle={true}
-          onChangeToggle={setShowPassword}
-          type={showPassword ? 'text' : 'password'}
-          value={password}
-          onChangeValue={onChangePassword} />
-      </FormAuthComponent>
-    </section>
+    <GreenRectangle>
+      <LayoutAuthComponent>
+        <FormAuthComponent>
+          <div className="font-bold text-primary text-5xl mt-14 max-sm:text-4xl">
+            Reset Password
+          </div>
+
+          <div className="text-tthird font-light text-sm mt-8">
+            Masukkan password baru.
+          </div>
+          <InputComponent label="Password"
+            placeholder='Silahkan masukkan password...'
+            toggle={true}
+            onChangeToggle={setShowPassword}
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChangeValue={onChangePassword}
+            leftIcon={FaLock}
+          />
+          <ButtonComponent
+            onClick={onSendNewPassword}
+            title='Submit'
+          />
+        </FormAuthComponent>
+      </LayoutAuthComponent>
+    </GreenRectangle>
   );
 };

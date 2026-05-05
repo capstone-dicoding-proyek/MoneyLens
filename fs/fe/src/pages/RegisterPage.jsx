@@ -4,7 +4,15 @@ import useInputs from '../hooks/useInput';
 import { useToast } from '../hooks/useToast';
 import FormAuthComponent from '../components/FormAuthComponent';
 import InputComponent from '../components/InputComponent';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import GreenRectangle from '../components/LoginPageComponent';
+import { GoArrowLeft } from 'react-icons/go';
+import { MdEmail } from 'react-icons/md';
+import { FaKeyboard, FaLock, FaUser } from 'react-icons/fa';
+import { FcGoogle } from 'react-icons/fc';
+import { useGoogleLogin } from '@react-oauth/google';
+import LayoutAuthComponent from '../components/LayoutAuthComponent';
+import ButtonComponent from '../components/ButtonComponent';
 
 export default function RegisterPage() {
   const [email, onChangeEmail] = useInputs();
@@ -16,10 +24,17 @@ export default function RegisterPage() {
     confirm: false,
   });
   const [isLoading, setIsLoading] = useState(false);
-
-  const { handleRegister } = useAuth();
+  const navigate = useNavigate();
+  const { handleRegister, handleLoginWithGoogle } = useAuth();
   const { addToast } = useToast();
   const debounceRef = useRef(null);
+
+  const loginGoogle = useGoogleLogin({
+    onSuccess: handleLoginWithGoogle,
+    onError: () => addToast('Login gagal!', { type: 'error' }),
+  });
+
+
 
   const validate = () => {
     if (!fullname.trim()) {
@@ -58,44 +73,92 @@ export default function RegisterPage() {
   };
 
   return (
-    <section>
-      <FormAuthComponent buttonTitle="Daftar" onClickButton={onSubmitRegister} isLoadingButton={isLoading}>
-        <InputComponent
-          label="Nama"
-          placeholder="Silakan masukkan nama..."
-          value={fullname}
-          onChangeValue={onChangeFullname}
-        />
-        <InputComponent
-          type='email'
-          label="Email"
-          placeholder="Silakan masukkan email..."
-          value={email}
-          onChangeValue={onChangeEmail}
-        />
-        <InputComponent
-          label="Password"
-          placeholder="Silakan masukkan password..."
-          toggle={true}
-          onChangeToggle={() => setShowPassword((p) => ({ ...p, password: !p.password }))}
-          type={showPassword.password ? 'text' : 'password'}
-          value={password}
-          onChangeValue={onChangePassword}
-        />
-        <InputComponent
-          label="Konfirmasi Password"
-          placeholder="Ulangi password..."
-          toggle={true}
-          onChangeToggle={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))}
-          type={showPassword.confirm ? 'text' : 'password'}
-          value={confirmPassword}
-          onChangeValue={onChangeConfirmPassword}
-        />
-      </FormAuthComponent>
+    <GreenRectangle>
+      <LayoutAuthComponent>
+        <div className="flex items-center w-92 ">
+          <GoArrowLeft
+            className="cursor-pointer mr-24 size-6"
+            onClick={() => navigate(-1)}
+          />
+          <span>sudah menjadi member? </span>
+          <Link to={'/login'}>
+            <span className="text-primary transition-colors hover:text-secondary cursor-pointer">
+              masuk
+            </span>
+          </Link>
+        </div>
 
-      <p>
-        Sudah punya akun? <Link to="/login">Login</Link>
-      </p>
-    </section>
+        <div className="font-bold text-primary text-5xl mt-14 max-sm:text-4xl max-sm:mt-10">
+          Daftar
+        </div>
+
+        <div className="text-tthird font-light text-sm mt-8 max-sm:mt-4">
+          Silakan daftar untuk mulai mengelola dan mencatat keuangan Anda.
+        </div>
+
+        {/* Form */}
+        <FormAuthComponent >
+          <InputComponent
+            type="text"
+            placeholder="Name"
+            value={fullname}
+            onChangeValue={onChangeFullname}
+            leftIcon={FaUser}
+          />
+          <InputComponent
+            type="text"
+            placeholder="Email"
+            value={email}
+            onChangeValue={onChangeEmail}
+            leftIcon={MdEmail}
+          />
+
+          <InputComponent
+            type={showPassword.password ? 'text' : 'password'}
+            toggle={true}
+            placeholder="Password"
+            value={password}
+            onChangeToggle={() => setShowPassword((p) => ({ ...p, password: !p.password }))}
+            onChangeValue={onChangePassword}
+            leftIcon={FaLock}
+          />
+
+          <div className="-space-x-4 ">
+            <ul className="ml-4 space-y-2 text-xs text-tthird list-disc">
+              <li>Password harus minimal 8 karakter</li>
+              <li>
+                Harus mengandung huruf besar, huruf kecil, angka,
+                <br />
+                dan simbol{' '}
+              </li>
+              <li>Contoh simbol: !@#$%^&*</li>
+            </ul>
+          </div>
+
+          {/* Konfirmasi Password */}
+          <InputComponent
+            type={showPassword.confirm ? 'text' : 'password'}
+            toggle={true}
+            onChangeToggle={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))}
+            placeholder="Password"
+            value={confirmPassword}
+            onChangeValue={onChangeConfirmPassword}
+            leftIcon={FaKeyboard}
+          />
+        </FormAuthComponent>
+
+        <div className="flex items-center gap-20 mt-10 max-sm:mt-6">
+          <ButtonComponent
+            onClick={onSubmitRegister}
+            title='Submit'
+          />
+          <div className="text-lg font-normal text-tthird">or</div>
+          <FcGoogle
+            onClick={() => loginGoogle()}
+            className="cursor-pointer text-4xl"
+          />
+        </div>
+      </LayoutAuthComponent>
+    </GreenRectangle>
   );
 }

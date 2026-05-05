@@ -1,19 +1,7 @@
-export default function FormAuthComponent({ buttonTitle, isLoadingButton, onClickButton, children }){
+export default function FormAuthComponent({ children }){
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onClickButton();
-      }}
-      className='flex w-full flex-col gap-6'>
+    <form  className='space-y-14 mt-8 max-sm:space-y-10 '>
       {children}
-      <button
-        className='cursor-pointer'
-        type='submit'
-        disabled={isLoadingButton}
-      >
-        {isLoadingButton ? 'Loading...' : buttonTitle}
-      </button>
     </form>
   );
 }
