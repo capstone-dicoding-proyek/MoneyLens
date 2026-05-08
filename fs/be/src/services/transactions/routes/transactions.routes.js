@@ -1,0 +1,21 @@
+import express from 'express';
+import authenticateToken from '../../../middlewares/authenticate-token.js';
+import validate from '../../../middlewares/validate.js';
+import { addTransactionsExpense, addTransactionsIncome, getChart, getDashboard } from '../controller/transactions.controller.js';
+import { transactionsValidatorExpense, transactionsValidatorIncome } from '../validator/transactions.validator.js';
+import VerifyVerifiedEmail from '../../../middlewares/verify-verified-email.js';
+
+const router = express.Router();
+
+router.use(authenticateToken, VerifyVerifiedEmail);
+
+router.post('/transactions/expense', validate(transactionsValidatorExpense), addTransactionsExpense);
+
+router.post('/transactions/income', validate(transactionsValidatorIncome), addTransactionsIncome);
+
+router.get('/transactions/chart',  getChart);
+
+router.get('/transactions/dashboard', getDashboard);
+
+
+export default router;
