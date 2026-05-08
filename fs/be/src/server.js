@@ -6,7 +6,7 @@ import cors from 'cors';
 import ErrorHandler from './middlewares/error-handling.js';
 import Routers from './routes.js';
 
-const app = express();
+export const app = express();
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());

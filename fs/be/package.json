@@ -15,7 +15,8 @@
     "migrate": "node-pg-migrate",
     "migrate:up": "node-pg-migrate up",
     "migrate:down": "node-pg-migrate down --all",
-    "migrate:create": "node-pg-migrate create"
+    "migrate:create": "node-pg-migrate create",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
@@ -38,8 +39,11 @@
     "redis": "^5.11.0"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "eslint-config-dicodingacademy": "^0.9.5",
     "globals": "^17.4.0",
-    "node-pg-migrate": "^8.0.4"
+    "jest": "^30.3.0",
+    "node-pg-migrate": "^8.0.4",
+    "supertest": "^7.2.2"
   }
 }
