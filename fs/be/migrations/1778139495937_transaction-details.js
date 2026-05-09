@@ -35,7 +35,7 @@ export const up = (pgm) => {
         },
         quantity: {
             type: 'INTEGER',
-            notNull: true
+            notNull: false
         },
         unit_price: {
             type: 'BIGINT',
@@ -70,4 +70,5 @@ export const up = (pgm) => {
  */
 export const down = (pgm) => {
     pgm.dropTable('transaction_details');
+    pgm.dropType('transaction_detail_type');
 };

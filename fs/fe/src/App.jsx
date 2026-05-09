@@ -8,26 +8,40 @@ import VerifikasiEmailPage from './pages/VerifikasiEmail';
 import ResendVerifikasiEmailPage from './pages/ResendVerifikasiEmail';
 import NewPasswordPage from './pages/NewPasswordPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import AddTransactionPage from './pages/AddTransactionPage';
 
 
 function App() {
   return (
     <Routes>
-      {/* Belum Login */}
+      {/* Guest only */}
       <Route element={<GuestRoute />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/auth/resend-verifikasi-email" element={<ResendVerifikasiEmailPage />} />
-        <Route path="/auth/verify-email" element={<VerifikasiEmailPage />} />
-        <Route path="/auth/verif-reset-token" element={<NewPasswordPage />} />
         <Route path="/reset-password" element={<ForgotPasswordPage />} />
       </Route>
 
-      {/* Sudah Login */}
+      <Route
+        path="/auth/resend-verifikasi-email"
+        element={<ResendVerifikasiEmailPage />}
+      />
+
+      <Route
+        path="/auth/verify-email"
+        element={<VerifikasiEmailPage />}
+      />
+
+      <Route
+        path="/auth/verif-reset-token"
+        element={<NewPasswordPage />}
+      />
+
+      {/* Private */}
       <Route element={<PrivateRoute />}>
         <Route path="/" element={<DashboardPage />} />
       </Route>
 
+      <Route path="/transaction" element={<AddTransactionPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
