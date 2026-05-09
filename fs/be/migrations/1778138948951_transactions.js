@@ -28,7 +28,7 @@ export const up = (pgm) => {
         },
         type: {
             type: 'transaction_type',
-            notNull: true
+            notNull: true   
         },
         transaction_date: {
             type: 'TIMESTAMP',
@@ -54,4 +54,5 @@ export const up = (pgm) => {
  */
 export const down = (pgm) => {
     pgm.dropTable('transactions');
+    pgm.dropType('transaction_type');
 };

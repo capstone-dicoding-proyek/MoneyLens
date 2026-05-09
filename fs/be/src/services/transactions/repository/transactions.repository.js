@@ -32,22 +32,33 @@ export class TransactionsRepository extends DatabasePool {
       const transactionResult = await client.query(transactionQuery);
 
       const transactionID = transactionResult.rows[0].id;
-
       for (const item of items) {
+        const quantity =
+    item.detailType === 'product'
+      ? Number(item.quantity)
+      : null;
+
+        const unitPrice = Number(item.unitPrice);
+
+        const totalPrice =
+    item.detailType === 'product'
+      ? quantity * unitPrice
+      : unitPrice;
+
         const detailQuery = {
           text: `
-          INSERT INTO transaction_details
-          (id, transaction_id, detail_type, name, quantity, unit_price, total_price)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-        `,
+      INSERT INTO transaction_details
+      (id, transaction_id, detail_type, name, quantity, unit_price, total_price)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+    `,
           values: [
             `transaction-details-${nanoid()}`,
             transactionID,
             item.detailType,
             item.name,
-            item.quantity,
-            item.unitPrice,
-            item.quantity * item.unitPrice,
+            quantity,
+            unitPrice,
+            totalPrice,
           ],
         };
 
