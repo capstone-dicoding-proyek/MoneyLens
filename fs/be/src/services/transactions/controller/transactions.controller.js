@@ -1,4 +1,6 @@
+import { ClientError } from '../../../exceptions/client-error.js';
 import response from '../../../utils/response.js';
+import {  uploadToCloud } from '../../../utils/upload-file.js';
 import { TransactionsRepository } from '../repository/transactions.repository.js';
 
 const transactionsRepository = new TransactionsRepository();
@@ -55,7 +57,7 @@ export const getDashboard = async (req, res, next) => {
     endDate,
   });
 
-  return response(res, 200, 'ok', {
+  return response(res, 200, 'dashboard success', {
     summary
   });
 };
@@ -70,7 +72,18 @@ export const getChart = async (req, res, next) => {
     userID: id,
     range
   });
-  return response(res, 200, 'ok', {
+  return response(res, 200, 'chart success', {
     chart
   });
+};
+
+export const uploadFileFoto = async (req, res, next) => {
+  if (!req.file) {
+    return next(new ClientError('No file uploaded'));
+  }
+
+  //  const result = await uploadToDrive(req.file);
+  const result = await uploadToCloud(req.file);
+
+  return response(res, 200, result);
 };
