@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <GreenRectangle>
-      <div className="p-12 ml-32 font-secondary tracking-wider w-114 max-sm:p-2 max-sm:ml-6 max-sm:mt-10 max-sm:w-96 max-sm:max-h-screen">
+      <div className="p-12 md:pl-11 ml-32 font-secondary tracking-wider w-114 max-sm:p-2 max-sm:ml-6 max-sm:mt-10 max-sm:w-96 max-sm:max-h-screen">
         <div className="flex items-center  w-92">
           <GoArrowLeft
             className="cursor-pointer mr-25 size-6"
@@ -32,11 +32,11 @@ export default function ForgotPasswordPage() {
           </Link>
         </div>
 
-        <div className="font-bold text-primary text-5xl mt-14">
+        <div className="font-bold text-primary text-5xl mt-14 md:text-4xl md:mt-8">
           Lupa Password?
         </div>
 
-        <div className="text-tthird font-light text-sm mt-8">
+        <div className="text-tthird font-light text-sm mt-8 md:mt-4">
           Masukkan email anda untuk mendapatkan tautan <br />
           reset password.
         </div>

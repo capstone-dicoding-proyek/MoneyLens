@@ -18,7 +18,7 @@ export default function RegisterPage() {
 
   return (
     <GreenRectangle>
-      <div className="p-12 ml-32 font-secondary tracking-wider w-114 max-sm:p-2 max-sm:ml-6 max-sm:mt-10 max-sm:w-96 max-sm:max-h-screen">
+      <div className="p-12 md:p-8  ml-32 font-secondary tracking-wider w-114 max-sm:p-2 max-sm:ml-6 max-sm:mt-10  max-sm:w-96 max-sm:max-h-screen">
         <div className="flex items-center w-92 ">
           <GoArrowLeft
             className="cursor-pointer mr-24 size-6"
@@ -32,16 +32,16 @@ export default function RegisterPage() {
           </Link>
         </div>
 
-        <div className="font-bold text-primary text-5xl mt-14 max-sm:text-4xl max-sm:mt-10">
+        <div className="font-bold text-primary text-5xl mt-14 max-sm:text-4xl max-sm:mt-10 md:text-4xl md:mt-4">
           Daftar
         </div>
 
-        <div className="text-tthird font-light text-sm mt-8 max-sm:mt-4">
+        <div className="text-tthird font-light text-sm mt-8 md:mt-4 max-sm:mt-4 md:text-sm">
           Silakan daftar untuk mulai mengelola dan mencatat keuangan Anda.
         </div>
 
         {/* Form */}
-        <form className="space-y-14 mt-8 max-sm:space-y-10">
+        <form className="space-y-14 mt-8 max-sm:space-y-10 md:space-y-8 md:mt-4">
           <div className="flex items-center">
             <div className="flex items-center border-b-1 border-tthird pb-2 w-90">
               <FaUser className="ml-2 mr-4 size text-tthird" />
@@ -75,8 +75,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="-space-x-4 ">
-            <ul className="ml-4 space-y-2 text-xs text-tthird list-disc">
+          <div className="-space-x-4 md:-space-x-2">
+            <ul className="ml-4 space-y-2 md:space-y-0 text-xs text-tthird list-disc">
               <li>Password harus minimal 8 karakter</li>
               <li>
                 Harus mengandung huruf besar, huruf kecil, angka,
@@ -100,7 +100,7 @@ export default function RegisterPage() {
           </div>
         </form>
 
-        <div className="flex items-center gap-20 mt-10 max-sm:mt-6">
+        <div className="flex items-center gap-20 mt-10 max-sm:mt-6 md:mt-4">
           <button
             type="submit"
             className="bg-primary text-white w-36 h-10 rounded-lg cursor-pointer text-xl font-bold tracking-wider bg-linear-to-r from-primary to-secondary transition-colors hover:bg-[#1e6b57] hover:from-[#1e6b57] hover:to-[#1e6b57] duration-300"

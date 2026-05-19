@@ -2,7 +2,8 @@ export default function GreenRectangle({ children }) {
   return (
     <div className="relative">
       <div
-        className="absolute w-360 h-screen bg-white max-sm:w-screen max-sm:clip-circle-responsive max-sm:[clip-path:circle(95%_at_5%_10%)]
+        className="absolute w-360 md:w-324  h-screen bg-white max-sm:w-screen max-sm:clip-circle-responsive max-sm:[clip-path:circle(95%_at_5%_10%)]
+      [clip-path:circle(100%_at_5%_50%)] md:[clip-path:circle(95%_at_5%_10%)]
       [clip-path:circle(100%_at_5%_50%)]"
       >
         {children}

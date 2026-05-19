@@ -17,7 +17,7 @@ export default function LoginPage() {
     <div className="relative min-h-screen">
       {/* <LoadingHand /> */}
       <GreenRectangle>
-        <div className="p-12 ml-32 font-secondary tracking-wider w-114 max-sm:p-2 max-sm:ml-6 max-sm:mt-10  max-sm:w-96 max-sm:max-h-screen">
+        <div className=" p-12 md:p-8 ml-32 font-secondary tracking-wider w-114 max-sm:p-2 max-sm:ml-6 max-sm:mt-10  max-sm:w-96 max-sm:max-h-screen">
           <div className="flex items-center  w-92">
             <GoArrowLeft className="cursor-pointer mr-25 size-6" />
             <span className="max-sm:text-xs ">belum menjadi member? </span>
@@ -28,16 +28,16 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          <div className="font-bold text-primary text-5xl mt-14 max-sm:text-4xl">
+          <div className="font-bold text-primary text-5xl mt-14 md:mt-4 max-sm:text-4xl md:text-4xl">
             Masuk
           </div>
 
-          <div className="text-tthird font-light text-sm mt-8">
+          <div className="text-tthird font-light text-sm mt-8 md:mt-4 md:text-sm">
             Silakan masuk untuk mulai mengelola dan mencatat keuangan Anda.
           </div>
 
           {/* Form */}
-          <form className="space-y-14 mt-8 max-sm:space-y-10">
+          <form className="space-y-14 mt-8 max-sm:space-y-10 md:space-y-8">
             <div className="flex items-center">
               <div className="flex items-center border-b-1 border-tthird pb-2 w-90">
                 <MdEmail className="ml-2 mr-4 size text-tthird" />
@@ -60,7 +60,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="-space-x-4y">
+            <div className="-space-x-4y md:-space-x-2">
               <ul className="ml-4 space-y-2 text-xs text-tthird list-disc ">
                 <li>Password harus minimal 8 karakter</li>
                 <li>

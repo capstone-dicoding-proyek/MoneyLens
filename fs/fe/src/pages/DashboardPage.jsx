@@ -16,15 +16,15 @@ export default function DashboardPage() {
             </div>
             <IoIosNotificationsOutline className="cursor-pointer text-3xl text-tthird hover:text-amber-300 duration-300 transition" />
           </div>
-          <div className="space-y-6">
-            <div className="text-tthird text-lg mt-12">
+          <div className="space-y-6 md:space-y-2">
+            <div className="text-tthird text-lg mt-12 md:text-md">
               Pengeluaran Bulan Ini
             </div>
             <div className="items-center flex justify-between">
-              <div className="text-4xl">
+              <div className="text-4xl md:text-3xl">
                 Rp <span className="font-bold">502.095</span>
               </div>
-              <button className="bg-primary hover:bg-secondary duration-300 transition rounded-md p-2 px-4 text-white font-bold text-lg cursor-pointer flex items-center gap-2">
+              <button className="bg-primary md:text-md hover:bg-secondary duration-300 transition rounded-md p-2 px-4 text-white font-bold text-lg cursor-pointer flex items-center gap-2">
                 <IoMdAdd />
                 Catat
               </button>
