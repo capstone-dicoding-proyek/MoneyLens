@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <GreenRectangle>
-      <div className="p-12 ml-32 font-secondary tracking-wider w-114 max-sm:p-2 max-sm:ml-6 max-sm:mt-10 border max-sm:w-96 max-sm:max-h-screen">
+      <div className="p-12 ml-32 font-secondary tracking-wider w-114 max-sm:p-2 max-sm:ml-6 max-sm:mt-10 max-sm:w-96 max-sm:max-h-screen">
         <div className="flex items-center  w-92">
           <GoArrowLeft
             className="cursor-pointer mr-25 size-6"

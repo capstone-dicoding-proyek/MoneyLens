@@ -4,6 +4,8 @@ import GreenRectangle from "./components/LoginPageComponent";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import DashboardPage from "./pages/DashboardPage";
+import HistoryPage from "./pages/HistoryPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgotPassword" element={<ForgotPasswordPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </div>
     </main>
