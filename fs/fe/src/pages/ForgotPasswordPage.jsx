@@ -93,11 +93,11 @@ export default function ForgotPasswordPage() {
           </Link>
         </div>
 
-        <div className="font-bold text-primary text-5xl mt-14">
+        <div className="font-bold text-primary text-5xl mt-14 md:text-4xl md:mt-8">
           Lupa Password?
         </div>
 
-        <div className="text-tthird font-light text-sm mt-8">
+        <div className="text-tthird font-light text-sm mt-8 md:mt-4">
           Masukkan email anda untuk mendapatkan tautan <br />
           reset password.
         </div>
