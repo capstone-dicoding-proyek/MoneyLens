@@ -1,18 +1,18 @@
 import { ClientError } from '../../../exceptions/client-error.js';
 import response from '../../../utils/response.js';
-import {  uploadToCloud } from '../../../utils/upload-file.js';
+import { uploadToCloud } from '../../../utils/upload-file.js';
 import { TransactionsRepository } from '../repository/transactions.repository.js';
 
 const transactionsRepository = new TransactionsRepository();
 
 // eslint-disable-next-line no-unused-vars
 export const addTransactionsExpense = async (req, res, next) => {
-  const { items, transactionDate } = req.validated;
+  const { items, transactionDate, description } = req.validated;
   const { id } = req.user;
 
   const totalAmount = items.reduce((acc, item) => {
     const quantity =
-      item.detailType === 'product'
+      item.detailType === 'product' || item.detailType === 'food_drink'
         ? Number(item.quantity)
         : 1;
 
@@ -21,6 +21,7 @@ export const addTransactionsExpense = async (req, res, next) => {
 
   await transactionsRepository.createTransactionWithDetails({
     userID: id,
+    description,
     totalAmount,
     type: 'expense',
     transactionDate: transactionDate,
@@ -32,12 +33,14 @@ export const addTransactionsExpense = async (req, res, next) => {
 
 // eslint-disable-next-line no-unused-vars
 export const addTransactionsIncome = async (req, res, next) => {
-  const { totalAmount, transactionDate } = req.validated;
+  const { totalAmount, description, nameIncome, transactionDate } = req.validated;
   const { id } = req.user;
 
   await transactionsRepository.createTransactionIncome({
     userID: id,
     totalAmount,
+    description,
+    nameIncome,
     type: 'income',
     transactionDate: transactionDate,
   });
@@ -45,36 +48,22 @@ export const addTransactionsIncome = async (req, res, next) => {
   return response(res, 201, 'Berhasil menambahkan transaksi');
 };
 
+
 // eslint-disable-next-line no-unused-vars
 export const getDashboard = async (req, res, next) => {
   const { id } = req.user;
-  const { range, startDate, endDate } = req.query;
+  const { startDate, endDate } = req.query;
 
-  const summary = await transactionsRepository.getDashboardSummary({
-    userID: id,
-    range,
-    startDate,
-    endDate,
-  });
 
-  return response(res, 200, 'dashboard success', {
-    summary
-  });
-};
+  const [chart, summary, category, history] = await Promise.all([
+    transactionsRepository.getChart({ userID: id, startDate, endDate }),
+    transactionsRepository.getDashboardSummary({ userID: id, startDate, endDate }),
+    transactionsRepository.getCategoryBreakdown({ userID: id, startDate, endDate }),
+    transactionsRepository.getHistory({ userID: id, startDate, endDate, page: 1, limit: 10 }),
+  ]);
 
-// eslint-disable-next-line no-unused-vars
-export const getChart = async (req, res, next) => {
-  const { id } = req.user;
-  const { range, startDate, endDate } = req.query;
-  const chart = await transactionsRepository.getChart({
-    endDate,
-    startDate,
-    userID: id,
-    range
-  });
-  return response(res, 200, 'chart success', {
-    chart
-  });
+  return response(res, 200, 'dashboard success', { chart, summary, category, history });
+
 };
 
 export const uploadFileFoto = async (req, res, next) => {
@@ -82,8 +71,66 @@ export const uploadFileFoto = async (req, res, next) => {
     return next(new ClientError('No file uploaded'));
   }
 
-  //  const result = await uploadToDrive(req.file);
-  const result = await uploadToCloud(req.file);
+  // const result = await uploadToCloud(req.file);
 
-  return response(res, 200, result);
+  return response(res, 200, { tes: 'ok' });
+};
+
+// eslint-disable-next-line no-unused-vars
+export const getHistory = async (req, res, next) => {
+  const { id } = req.user;
+  const { startDate, endDate, search, type } = req.query;
+
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, parseInt(req.query.limit) || 20);
+
+  let prevStart, prevEnd;
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffMs = end - start;
+    prevEnd = new Date(start.getTime() - 86400000);
+    prevStart = new Date(prevEnd.getTime() - diffMs);
+  }
+
+  const [availableYears, history, summary, previousSummary] = await Promise.all([
+    transactionsRepository.getAvailableYears({ userID: id }),
+
+    transactionsRepository.getHistory({
+      userID: id,
+      startDate,
+      endDate,
+      search,
+      type,
+      page,
+      limit: limit + 1,
+    }),
+
+    transactionsRepository.getDashboardSummary({
+      userID: id, startDate, endDate,
+    }),
+
+    prevStart && prevEnd
+      ? transactionsRepository.getDashboardSummary({
+        userID: id,
+        startDate: prevStart.toISOString().split('T')[0],
+        endDate: prevEnd.toISOString().split('T')[0],
+      })
+      : Promise.resolve({ income: 0, expense: 0, balance: 0 }),
+  ]);
+
+  const hasMore = history.length > limit;
+  const data = hasMore ? history.slice(0, limit) : history;
+
+  return response(res, 200, 'History ok', {
+    availableYears,
+    history: data,
+    summary,
+    previousSummary,
+    pagination: {
+      page,
+      limit,
+      hasMore,
+    },
+  });
 };

@@ -111,3 +111,12 @@ export const getUserLogged = async (req, res, next) => {
   const { password, ...data } = result;
   return response(res, 200, 'User logged success', { data });
 };
+
+// eslint-disable-next-line no-unused-vars
+export const updateFullName = async (req, res, next) => {
+  const { id } = req.user;
+  const { fullname } = req.validated;
+  await usersRepository.updateFullName({ fullname, userID: id });
+  // eslint-disable-next-line no-unused-vars
+  return response(res, 200, 'Update user success');
+};

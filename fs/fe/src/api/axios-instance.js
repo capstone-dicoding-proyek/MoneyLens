@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import axios from 'axios';
 import { clearTokens, getAccessToken, getRefreshToken } from '../utils/local-storage';
 
@@ -20,12 +21,10 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    console.log('haii');
-    console.log(`interceptor : ${error}`);
-    console.log(`interceptor response: ${error.response}`);
-    console.log(`interceptor status: ${error.response?.status}`);
+    const isLoginRequest =
+      originalRequest.url === '/auth' && originalRequest.method === 'post';
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry &&  !isLoginRequest) {
       originalRequest._retry = true;
 
       try {
@@ -41,7 +40,6 @@ api.interceptors.response.use(
         return api(originalRequest);
 
       } catch (err) {
-        console.log(`interceptor err ${err}`);
         clearTokens();
         window.location.href = '/login';
       }

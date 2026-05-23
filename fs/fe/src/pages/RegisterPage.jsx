@@ -106,7 +106,7 @@ export default function RegisterPage() {
             leftIcon={FaUser}
           />
           <InputComponent
-            type="text"
+            type="email"
             placeholder="Email"
             value={email}
             onChangeValue={onChangeEmail}
@@ -149,6 +149,7 @@ export default function RegisterPage() {
 
         <div className="flex items-center gap-20 mt-10 max-sm:mt-6">
           <ButtonComponent
+            isLoading={isLoading}
             onClick={onSubmitRegister}
             title='Submit'
           />

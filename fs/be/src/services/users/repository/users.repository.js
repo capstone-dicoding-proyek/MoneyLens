@@ -72,5 +72,14 @@ export class UsersRepository extends DatabasePool {
 
   }
 
+  async updateFullName({ fullname, userID }){
+    const query = {
+      text: 'UPDATE users SET fullname = $1 WHERE id = $2 ',
+      values: [fullname, userID]
+    };
+    await this.pool.query(query);
+
+  }
+
 }
 export default UsersRepository;

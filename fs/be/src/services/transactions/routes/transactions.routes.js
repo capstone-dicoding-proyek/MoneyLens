@@ -1,8 +1,8 @@
 import express from 'express';
 import authenticateToken from '../../../middlewares/authenticate-token.js';
 import validate from '../../../middlewares/validate.js';
-import { addTransactionsExpense, addTransactionsIncome, getChart, getDashboard, uploadFileFoto } from '../controller/transactions.controller.js';
-import { transactionsValidatorExpense, transactionsValidatorIncome } from '../validator/transactions.validator.js';
+import { addTransactionsExpense, addTransactionsIncome, getDashboard, getHistory, uploadFileFoto } from '../controller/transactions.controller.js';
+import { transactionGetQuery, transactionsValidatorExpense, transactionsValidatorIncome } from '../validator/transactions.validator.js';
 import VerifyVerifiedEmail from '../../../middlewares/verify-verified-email.js';
 import uploadFileMiddleware from '../../../middlewares/upload-file-middleware.js';
 
@@ -14,11 +14,13 @@ router.post('/transactions/expense', validate(transactionsValidatorExpense), add
 
 router.post('/transactions/income', validate(transactionsValidatorIncome), addTransactionsIncome);
 
-router.get('/transactions/chart',  getChart);
 
-router.get('/transactions/dashboard', getDashboard);
+router.get('/transactions/dashboard', validate(transactionGetQuery, 'query'), getDashboard);
 
 router.post('/transactions/upload', uploadFileMiddleware, uploadFileFoto);
+
+router.get('/transactions/history', getHistory);
+
 
 
 export default router;

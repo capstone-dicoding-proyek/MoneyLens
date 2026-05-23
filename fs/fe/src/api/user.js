@@ -25,3 +25,9 @@ export const getUserLogged = async () => {
   const res = await api.get('/users');
   return res.data;
 };
+
+
+export const putUserName = async ({ fullname }) => {
+  const res = await api.put('/users', { fullname });
+  return res.data;
+};
