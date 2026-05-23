@@ -1,3 +1,4 @@
 node_modules/
 .env
+.env.docker
 capstone-494119-2a11cc64188e.json
