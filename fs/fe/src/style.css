@@ -3,13 +3,19 @@
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
 .theme-bg {
-    @apply dark:bg-[#121212] bg-[#FFFFFF] 
+  @apply dark:bg-[#121212] bg-[#FFFFFF];
 }
 .secondary-bg {
-    @apply dark:bg-[#212121] bg-[#F5F5F5] 
+  @apply dark:bg-[#212121] bg-[#F5F5F5];
 }
-h1, h3,a, h2, label, p, input{
-    @apply dark:text-[#FFFFFF] text-[#121212]
+h1,
+h3,
+a,
+h2,
+label,
+p,
+input {
+  @apply dark:text-[#FFFFFF] text-[#121212];
 }
 /* .input {
     @apply dark:bg-[#212121] bg-[#F5F5F5] rounded-md ring-2 px-2 py-2.5 ring-gray-400 outline-none focus:ring-2 focus:ring-fuchsia-600 focus:dark:ring-fuchsia-400
@@ -17,12 +23,21 @@ h1, h3,a, h2, label, p, input{
 .theme-button {
     @apply dark:bg-fuchsia-400 bg-fuchsia-600 text-white rounded-md hover:bg-fuchsia-400 dark:hover:bg-fuchsia-600 transition ease-in px-3 py-2
 } */
- 
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
 
 @theme {
-  --color-primary: #2FA084;
-  --color-secondary: #6FCF97;
+  --color-primary: #2fa084;
+  --color-secondary: #6fcf97;
   --color-tthird: #888888;
+  --color-line: #e3e3e3;
   --font-primary: "Inter", sans-serif;
   --font-secondary: "Poppins", sans-serif;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 import FormAuthComponent from '../components/FormAuthComponent';
 import InputComponent from '../components/InputComponent';

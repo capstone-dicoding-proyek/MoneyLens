@@ -1,5 +1,7 @@
-export const formatTime = (seconds) => {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+export const formatTime = (dateString) => {
+  return new Date(dateString).toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
 };

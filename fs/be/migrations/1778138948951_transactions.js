@@ -34,6 +34,12 @@ export const up = (pgm) => {
             type: 'TIMESTAMP',
             notNull: true
         },
+        name_income:{
+            type:'TEXT'
+        },
+        description:{
+            type:'TEXT'
+        },
         created_at: {
             type: 'TIMESTAMP',
             notNull: true,
