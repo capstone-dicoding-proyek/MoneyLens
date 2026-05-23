@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 
 const { app } = await import('../src/server.js');
 
@@ -122,6 +122,26 @@ describe('Users Service - HTTP Endpoint Validation', () => {
       const response = await request(app)
         .get('/api/users')
         .set('Authorization', 'InvalidFormat');
+
+      expect(response.statusCode).toBe(401);
+    });
+  });
+
+  describe('PUT /api/users - Update Fullname', () => {
+    it('should return 401 when no authorization token provided', async () => {
+      const response = await request(app)
+        .put('/api/users')
+        .send({ fullname: 'Updated Name' });
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body.status).toBe('fail');
+    });
+
+    it('should return 401 when invalid authorization token provided', async () => {
+      const response = await request(app)
+        .put('/api/users')
+        .set('Authorization', 'Bearer invalid-token')
+        .send({ fullname: 'Updated Name' });
 
       expect(response.statusCode).toBe(401);
     });
