@@ -46,5 +46,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:5000/api || exit 1
 
-# Run migrations then start server
+
 CMD ["sh", "-c", "npx node-pg-migrate up --envPath /dev/null && node ./src/server.js"]

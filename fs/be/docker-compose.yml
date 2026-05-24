@@ -1,5 +1,5 @@
 services:
-  #  PostgreSQL 
+
   postgres:
     image: postgres:16-alpine
     container_name: moneylens-postgres
@@ -21,7 +21,24 @@ services:
       start_period: 30s
     networks:
       - moneylens-network
-  #  Backend API 
+
+
+  redis:
+    image: redis:8.4-alpine
+    container_name: moneylens-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - moneylens-network
   api:
     build:
       context: .
@@ -34,11 +51,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - moneylens-network
+
 volumes:
   postgres_data:
     driver: local
+  redis_data:
+    driver: local
+
 networks:
   moneylens-network:
     driver: bridge

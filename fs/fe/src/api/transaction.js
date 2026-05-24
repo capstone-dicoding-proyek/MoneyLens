@@ -27,3 +27,8 @@ export const postTransactionUpload = async ({ formData }) => {
   return res.data;
 };
 
+export const deleteTransaction = async ({ userID, transactionID }) => {
+  const res = await api.delete('/transactions', { data: { userID, transactionID } });
+  return res.data;
+};
+

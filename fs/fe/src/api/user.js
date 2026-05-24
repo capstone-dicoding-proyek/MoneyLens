@@ -3,7 +3,7 @@ import { api } from './axios-instance';
 
 export const loginWithGoogle = async (credentialResponse) => {
   const res = await api.post('/users/google-login', {
-    token: credentialResponse.credential,
+    code: credentialResponse.code,
   });
   const { accessToken, refreshToken } = res.data.data;
   putTokens({ accessToken, refreshToken });

@@ -312,6 +312,7 @@ export default function HistoryPage() {
     >
       {isOpen.modalDetailItem && (
         <TransactionDetailModal
+          fetchData={fetchHistory}
           transaction={detailItem}
           clearDataDetailItem={clearDataDetailItem}
           onClose={() => setIsOpen((p) => ({ ...p, modalDetailItem: false }))}

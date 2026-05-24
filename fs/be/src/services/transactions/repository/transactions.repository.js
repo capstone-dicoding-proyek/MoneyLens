@@ -1,7 +1,20 @@
-
+import 'dotenv/config';
 import { nanoid } from 'nanoid';
-import DatabasePool from '../../../databases/database-pool.js';
-export class TransactionsRepository extends DatabasePool {
+import axios from 'axios';
+export class TransactionsRepository {
+  constructor(
+    databasePool,
+    cacheService
+  ) {
+    this.client = databasePool;
+    this.cache = cacheService;
+  }
+
+  _buildKey(prefix, userID, { range = 'all', startDate = '', endDate = '' } = {}) {
+    return `${prefix}:${userID}:${range}:${startDate}:${endDate}`;
+  }
+
+
   async createTransactionWithDetails({
     userID,
     totalAmount,
@@ -10,10 +23,9 @@ export class TransactionsRepository extends DatabasePool {
     items,
     description = null
   }) {
-    const client = await this.pool.connect();
 
+    const client = await this.client.pool.connect();
     try {
-      await client.query('BEGIN');
       const transactionQuery = {
         text: `
         INSERT INTO transactions (id, user_id, total_amount, type,  description , transaction_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
@@ -60,7 +72,7 @@ export class TransactionsRepository extends DatabasePool {
       }
 
       await client.query('COMMIT');
-
+      await this.cache.invalidateUser(userID);
       return transactionID;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -96,7 +108,8 @@ export class TransactionsRepository extends DatabasePool {
         transactionDate,
       ],
     };
-    const result = await this.pool.query(query);
+    const result = await this.client.pool.query(query);
+    await this.cache.invalidateUser(userID);
     return result.rows[0].id;
   }
 
@@ -106,11 +119,12 @@ export class TransactionsRepository extends DatabasePool {
     startDate,
     endDate,
   }) {
-
+    const cacheKey = this._buildKey('dashboard', userID, { range, startDate, endDate });
     let whereClause = `
     WHERE user_id = $1
   `;
-
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
     const values = [userID];
 
     if (startDate && endDate) {
@@ -154,20 +168,23 @@ export class TransactionsRepository extends DatabasePool {
       values,
     };
 
-    const result = await this.pool.query(query);
+    const result = await this.client.pool.query(query);
+
 
     const income = Number(result.rows[0].income);
     const expense = Number(result.rows[0].expense);
+    const data = { income, expense, balance: income - expense };
 
-    return {
-      income,
-      expense,
-      balance: income - expense,
-    };
+    await this.cache.set(cacheKey, data, 300);
+    return data;
   }
 
   async getChart({ userID, range = 'all', startDate, endDate }) {
     const values = [userID];
+    const cacheKey = this._buildKey('chart', userID, { range, startDate, endDate });
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
 
     let dateFilter = '';
     let label;
@@ -238,16 +255,24 @@ export class TransactionsRepository extends DatabasePool {
       values,
     };
 
-    const result = await this.pool.query(query);
+    const result = await this.client.pool.query(query);
 
-    return result.rows.map((row) => ({
+    const data = result.rows.map((row) => ({
       label: row.label,
       income: Number(row.income),
       expense: Number(row.expense),
     }));
+
+    await this.cache.set(cacheKey, data, 300);
+    return data;
   }
 
   async getCategoryBreakdown({ userID, range = 'all', startDate, endDate }) {
+    const cacheKey = this._buildKey('category', userID, { range, startDate, endDate });
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
     const values = [userID];
     let dateFilter = '';
 
@@ -262,7 +287,7 @@ export class TransactionsRepository extends DatabasePool {
       dateFilter = "AND t.transaction_date >= NOW() - INTERVAL '1 year'";
     }
 
-    const result = await this.pool.query({
+    const result = await this.client.pool.query({
       text: `
       SELECT
         td.detail_type,
@@ -280,13 +305,16 @@ export class TransactionsRepository extends DatabasePool {
 
     const totalExpense = result.rows.reduce((sum, r) => sum + Number(r.total), 0);
 
-    return result.rows.map((r) => ({
+    const data = result.rows.map((r) => ({
       detailType: r.detail_type,
       total: Number(r.total),
       percent: totalExpense > 0
         ? Math.round((Number(r.total) / totalExpense) * 100)
         : 0,
     }));
+
+    await this.cache.set(cacheKey, data, 300);
+    return data;
   }
 
 
@@ -326,7 +354,7 @@ export class TransactionsRepository extends DatabasePool {
     const offset = (page - 1) * limit;
     values.push(limit, offset);
 
-    const result = await this.pool.query({
+    const result = await this.client.pool.query({
       text: `
       SELECT
         t.id,
@@ -372,7 +400,12 @@ export class TransactionsRepository extends DatabasePool {
   }
 
   async getAvailableYears({ userID }) {
-    const result = await this.pool.query({
+    const cacheKey = `years:${userID}`;
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.client.pool.query({
       text: `
       SELECT DISTINCT EXTRACT(YEAR FROM transaction_date)::INT AS year
       FROM transactions
@@ -382,7 +415,33 @@ export class TransactionsRepository extends DatabasePool {
       values: [userID],
     });
 
-    return result.rows.map((r) => r.year);
+    const data = result.rows.map((r) => r.year);
+
+    await this.cache.set(cacheKey, data, 3600);
+  }
+  async processOCR(file) {
+    const formData = new FormData();
+    formData.append(
+      'image',
+      new Blob([file.buffer]),
+      file.originalname
+    );
+
+    const response = await axios.post(
+      `${process.env.URLAI}/ocr`,
+      formData,
+    );
+
+    return response.data;
+  }
+
+  async deleteTransaction({ transactionID, userID }) {
+    const query = {
+      text: 'DELETE FROM transactions WHERE user_id = $1 AND id = $2',
+      values: [userID, transactionID]
+    };
+    await this.cache.invalidateUser(userID);
+    await this.client.pool.query(query);
   }
 
 }

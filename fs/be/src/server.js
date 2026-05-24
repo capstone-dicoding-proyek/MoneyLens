@@ -5,10 +5,13 @@ import morgan from 'morgan';
 import cors from 'cors';
 import ErrorHandler from './middlewares/error-handling.js';
 import Routers from './routes.js';
+import './container.js';
 
 export const app = express();
 app.use(cors({
-  origin: `${process.env.HOSTFE}:${process.env.PORTFE}`,
+  origin: process.env.URLFE,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  credentials: true,
 }));
 app.use(morgan('dev'));
 app.use(express.json());

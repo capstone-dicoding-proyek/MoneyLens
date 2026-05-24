@@ -85,7 +85,6 @@ export default function OcrSectionComponent({ onOcrResult }) {
       formData.append('foto', preview.blob, preview.filename);
 
       const res = await postTransactionUpload({ formData });
-      console.log(res);
       if (res) onOcrResult(res);
       cancelPreview();
     } catch (err) {

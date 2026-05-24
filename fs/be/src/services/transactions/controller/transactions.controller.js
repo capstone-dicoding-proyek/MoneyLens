@@ -1,9 +1,8 @@
+import { transactionsRepository } from '../../../container.js';
 import { ClientError } from '../../../exceptions/client-error.js';
+import { InvariantError } from '../../../exceptions/error.js';
 import response from '../../../utils/response.js';
 import { uploadToCloud } from '../../../utils/upload-file.js';
-import { TransactionsRepository } from '../repository/transactions.repository.js';
-
-const transactionsRepository = new TransactionsRepository();
 
 // eslint-disable-next-line no-unused-vars
 export const addTransactionsExpense = async (req, res, next) => {
@@ -66,14 +65,51 @@ export const getDashboard = async (req, res, next) => {
 
 };
 
+// eslint-disable-next-line no-unused-vars
+export const deleteTransaction = async (req, res, next) => {
+  console.log(req.validated);
+
+  const { userID, transactionID } = req.validated;
+  await transactionsRepository.deleteTransaction({ userID, transactionID });
+  return response(res, 200, 'Berhasil dihapus');
+};
+
 export const uploadFileFoto = async (req, res, next) => {
   if (!req.file) {
     return next(new ClientError('No file uploaded'));
   }
+  const result = await transactionsRepository.processOCR(req.file);
+  const data = result.data.map((transaction) => ({
+    ...transaction,
+    items: transaction.items.map((item) => {
+      const quantity = item.quantity ? Number(item.quantity) : null;
+      const totalPrice = item.totalPrice ? Number(item.totalPrice) : 0;
+      const unitPrice = item.unitPrice
+        ? Number(item.unitPrice)
+        : quantity
+          ? totalPrice / quantity
+          : totalPrice;
 
-  // const result = await uploadToCloud(req.file);
+      const detailType = item.detailType
+        ? item.detailType
+        : quantity
+          ? 'product'
+          : 'service';
 
-  return response(res, 200, { tes: 'ok' });
+      return {
+        ...item,
+        detailType,
+        quantity,
+        unitPrice,
+        totalPrice,
+      };
+    }),
+  }));
+  if (!result.success) return next(new InvariantError('Ocr e durung mari ojo dipokso...'));
+  await uploadToCloud(req.file);
+
+
+  return response(res, 200, {  data  });
 };
 
 // eslint-disable-next-line no-unused-vars

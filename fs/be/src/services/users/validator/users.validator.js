@@ -14,3 +14,7 @@ export const resetPasswordPayloadValidator = Joi.object({
   token: Joi.string().required(),
   password: Joi.string().min(8).required(),
 });
+
+// export const loginWithGoogleValidator = Joi.object({
+//   token: Joi.string().required(),
+// });
