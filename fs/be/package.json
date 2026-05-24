@@ -16,7 +16,9 @@
     "migrate:up": "node-pg-migrate up",
     "migrate:down": "node-pg-migrate down --all",
     "migrate:create": "node-pg-migrate create",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "migrate:prod": "cross-env NODE_ENV=production node-pg-migrate up --envPath=.env.production",
+    "dev:prod": "cross-env NODE_ENV=production nodemon ./src/server.js"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
@@ -40,10 +42,12 @@
     "nodemailer": "^8.0.5",
     "nodemon": "^3.1.14",
     "pg": "^8.18.0",
-    "redis": "^5.12.1"
+    "redis": "^5.12.1",
+    "resend": "^6.12.3"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "cross-env": "^10.1.0",
     "eslint-config-dicodingacademy": "^0.9.5",
     "globals": "^17.4.0",
     "jest": "^30.3.0",

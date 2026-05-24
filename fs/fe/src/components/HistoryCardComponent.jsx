@@ -1,6 +1,6 @@
 import { IoIosPaper } from 'react-icons/io';
 import { formatRupiah } from '../utils/format-rupiah.js';
-import { formatTime } from '../utils/format-time.js';
+import { formatDate } from '../utils/format-time.js';
 export default function HistoryCardComponent({ item }) {
 
 
@@ -22,7 +22,7 @@ export default function HistoryCardComponent({ item }) {
             : item.nameIncome?.trim() || '-'}
         </div>
         <div className="text-xs text-tthird">
-          {formatTime(item.transactionDate)}
+          {formatDate(item.transactionDate)}
         </div>
         {item.items?.length > 0 && (
           <div className="text-xs text-tthird mt-0.5">
