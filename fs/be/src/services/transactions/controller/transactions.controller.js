@@ -1,5 +1,6 @@
 import { transactionsRepository } from '../../../container.js';
 import { ClientError } from '../../../exceptions/client-error.js';
+import { InvariantError } from '../../../exceptions/error.js';
 import response from '../../../utils/response.js';
 import { uploadToCloud } from '../../../utils/upload-file.js';
 
@@ -104,7 +105,8 @@ export const uploadFileFoto = async (req, res, next) => {
       };
     }),
   }));
-  if (result.success) await uploadToCloud(req.file);
+  if (!result.success) return next(new InvariantError('Ocr e durung mari ojo dipokso...'));
+  await uploadToCloud(req.file);
 
 
   return response(res, 200, {  data  });
