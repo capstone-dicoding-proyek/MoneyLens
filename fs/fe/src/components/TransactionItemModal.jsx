@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { formatRupiah } from '../utils/format-rupiah';
-import { formatTime } from '../utils/format-time';
 import { deleteTransaction } from '../api/transaction';
 import { useToast } from '../hooks/useToast';
 import useAuth from '../hooks/useAuth';
 import { FaSpinner } from 'react-icons/fa';
+import { formatDate } from '../utils/format-time';
 
 export default function TransactionDetailModal({
   transaction,
@@ -62,7 +62,7 @@ export default function TransactionDetailModal({
           </button>
         </div>
         <div className="text-sm text-tthird">
-          {formatTime(transaction.transactionDate)}
+          {formatDate(transaction.transactionDate)}
         </div>
         <div className="text-sm text-tthird">
           {transaction.type === 'income' ? transaction.description : ''}

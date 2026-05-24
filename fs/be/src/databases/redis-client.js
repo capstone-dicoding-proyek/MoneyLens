@@ -2,7 +2,9 @@ import 'dotenv/config';
 import { createClient } from 'redis';
 class CacheService {
   constructor() {
+    console.log(process.env.REDIS_PASSWORD || undefined);
     this._client = createClient({
+      username: 'default',
       socket: {
         host: process.env.REDIS_HOST,
         port: process.env.REDIS_PORT || 6379,
