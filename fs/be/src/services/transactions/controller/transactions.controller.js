@@ -78,12 +78,36 @@ export const uploadFileFoto = async (req, res, next) => {
     return next(new ClientError('No file uploaded'));
   }
   const result = await transactionsRepository.processOCR(req.file);
+  const data = result.data.map((transaction) => ({
+    ...transaction,
+    items: transaction.items.map((item) => {
+      const quantity = item.quantity ? Number(item.quantity) : null;
+      const totalPrice = item.totalPrice ? Number(item.totalPrice) : 0;
+      const unitPrice = item.unitPrice
+        ? Number(item.unitPrice)
+        : quantity
+          ? totalPrice / quantity
+          : totalPrice;
 
-  console.log(result);
+      const detailType = item.detailType
+        ? item.detailType
+        : quantity
+          ? 'product'
+          : 'service';
 
-  // const result = await uploadToCloud(req.file);
+      return {
+        ...item,
+        detailType,
+        quantity,
+        unitPrice,
+        totalPrice,
+      };
+    }),
+  }));
+  if (result.success) await uploadToCloud(req.file);
 
-  return response(res, 200, { result });
+
+  return response(res, 200, {  data  });
 };
 
 // eslint-disable-next-line no-unused-vars

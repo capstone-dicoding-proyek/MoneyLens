@@ -26,7 +26,7 @@ const emptyItem = () => ({
 
 const todayParam = () => new Date().toISOString().split('T')[0];
 
-export default function InputTransactionComponent({ onClose,fetchData }) {
+export default function InputTransactionComponent({ onClose, fetchData }) {
   const [type, setType] = useState('expense');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -44,23 +44,29 @@ export default function InputTransactionComponent({ onClose,fetchData }) {
   });
   const [items, setItems] = useState([emptyItem()]);
 
-  const handleOcrResult = (data) => {
-    console.log(data);
-    return data;
+  const handleOcrResult = (response) => {
+    const data = response.message.data[0];
+    if (!data) return;
 
-    // if (type === "income") {
-    //   setIncome((prev) => ({ ...prev, ...data }));
-    // } else {
-    //   if (data.items?.length)
-    //     setItems(data.items.map((it) => ({ ...emptyItem(), ...it })));
-    //   if (data.description)
-    //     setExpense((prev) => ({ ...prev, description: data.description }));
-    //   if (data.transactionDate)
-    //     setExpense((prev) => ({
-    //       ...prev,
-    //       transactionDate: data.transactionDate,
-    //     }));
-    // }
+    if (data.items?.length) {
+      setItems(
+        data.items.map((item) => ({
+          ...emptyItem(),
+          detailType: item.detailType ?? 'product',
+          name: item.name ?? '',
+          quantity: item.quantity ?? 1,
+          unitPrice: item.unitPrice ?? '',
+        })),
+      );
+    }
+
+    setExpense((prev) => ({
+      ...prev,
+      ...(data.description && { description: data.description }),
+      ...(data.transactionDate && {
+        transactionDate: data.transactionDate.split('T')[0],
+      }),
+    }));
   };
 
   const addItem = () => setItems((prev) => [...prev, emptyItem()]);
@@ -121,7 +127,6 @@ export default function InputTransactionComponent({ onClose,fetchData }) {
     type === 'expense'
       ? calcGrandTotal(items)
       : Number(income.totalAmount) || 0;
-
 
   return (
     <ModalLayoutInputAndProfil title="Catat Transaksi" onClose={onClose}>

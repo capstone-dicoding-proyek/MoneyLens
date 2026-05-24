@@ -126,7 +126,7 @@ export default function DashboardPage() {
               }))
             }
             fetchData = {fetchDashboard}
-            />
+          />
         )}
         {isOpen.modalDetailItem && (
           <TransactionDetailModal

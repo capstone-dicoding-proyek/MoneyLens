@@ -423,16 +423,13 @@ export class TransactionsRepository {
     const formData = new FormData();
     formData.append(
       'image',
-      file.buffer,
+      new Blob([file.buffer]),
       file.originalname
     );
 
     const response = await axios.post(
-      `${process.env.HOSTAI}/ocr`,
+      `${process.env.URLAI}/ocr`,
       formData,
-      {
-        headers: formData.getHeaders()
-      }
     );
 
     return response.data;

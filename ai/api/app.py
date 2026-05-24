@@ -10,7 +10,7 @@ CORS(app)
 @app.route("/ocr", methods=["POST"])
 def ocr():
     image = request.files.get("image")
-
+    print(image)
     if not image:
         return jsonify({
             "success": False,
@@ -25,7 +25,7 @@ def ocr():
             "transactionDate": "2026-05-29T00:00:00.000Z",
             "items": [
                 {
-                    "detailType": "product",
+                    "detailType": None,
                     "name": "asdp[askd[p",
                     "quantity": None,
                     "unitPrice": 2233232,
@@ -36,7 +36,7 @@ def ocr():
     ]
 
     return jsonify({
-        "success": True,
+        "success": False,
         "data": data
     })
 
