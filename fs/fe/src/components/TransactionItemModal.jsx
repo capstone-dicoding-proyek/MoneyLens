@@ -1,12 +1,38 @@
+import { useState } from 'react';
 import { formatRupiah } from '../utils/format-rupiah';
 import { formatTime } from '../utils/format-time';
+import { deleteTransaction } from '../api/transaction';
+import { useToast } from '../hooks/useToast';
+import useAuth from '../hooks/useAuth';
+import { FaSpinner } from 'react-icons/fa';
 
 export default function TransactionDetailModal({
   transaction,
   onClose,
   clearDataDetailItem,
+  fetchData
 }) {
+  const [isDelete, setIsDelete] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { addToast } = useToast();
+  const { user } = useAuth();
+
   if (!transaction) return null;
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await deleteTransaction({ transactionID: transaction.id, userID: user.id });
+      addToast('Transaksi berhasil dihapus!', { type: 'success' });
+      onClose();
+      fetchData();
+    } catch (err) {
+      setError(err?.response?.data?.message ?? 'Gagal menyimpan transaksi');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div
       className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
@@ -39,7 +65,7 @@ export default function TransactionDetailModal({
           {formatTime(transaction.transactionDate)}
         </div>
         <div className="text-sm text-tthird">
-          {transaction.type === 'income' ?transaction.description   : ''}
+          {transaction.type === 'income' ? transaction.description : ''}
         </div>
         <div
           className={`text-2xl font-bold ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}
@@ -47,7 +73,6 @@ export default function TransactionDetailModal({
           {transaction.type === 'income' ? '+' : ''}
           {formatRupiah(transaction.totalAmount)}
         </div>
-
         {transaction.items?.length > 0 && (
           <div className="border-t border-line pt-4 space-y-2">
             <div className="text-sm font-semibold text-tthird uppercase tracking-wide">
@@ -73,6 +98,45 @@ export default function TransactionDetailModal({
             </div>
           </div>
         )}
+        {/*    button  */}
+        <div className="flex-shrink-0 border-t border-line px-5 py-4 space-y-3">
+          {error && (
+            <div className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {error}
+            </div>
+          )}
+          {isDelete && (
+            <p className="text-tthird text-sm">Yakin ingin menghapus?</p>
+          )}
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => {
+              isDelete ? handleDelete() : setIsDelete((prev) => !prev);
+            }}
+            className="w-full bg-red-500 hover:bg-red-500/60 active:bg-red-500/60 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center ease-in justify-center gap-2 cursor-pointer"
+          >
+            {loading ? (
+              <>
+                <FaSpinner className="animate-spin" /> Menyimpan...
+              </>
+            ) : isDelete ? (
+              'Lanjutkan'
+            ) : (
+              'Delete'
+            )}
+          </button>
+          {isDelete && (
+            <button
+              type="button"
+              onClick={() => setIsDelete((prev) => !prev)}
+              disabled={loading}
+              className="w-full bg-white ring-1 ring-tthird active:opacity-75 hover:opacity-75  text-tthird font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed ease-in flex items-center justify-center gap-2 cursor-pointer"
+            >
+              Batal
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

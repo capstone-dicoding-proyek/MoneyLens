@@ -64,6 +64,15 @@ export const getDashboard = async (req, res, next) => {
 
 };
 
+// eslint-disable-next-line no-unused-vars
+export const deleteTransaction = async (req, res, next) => {
+  console.log(req.validated);
+
+  const { userID, transactionID } = req.validated;
+  await transactionsRepository.deleteTransaction({ userID, transactionID });
+  return response(res, 200, 'Berhasil dihapus');
+};
+
 export const uploadFileFoto = async (req, res, next) => {
   if (!req.file) {
     return next(new ClientError('No file uploaded'));

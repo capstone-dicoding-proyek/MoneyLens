@@ -125,10 +125,12 @@ export default function DashboardPage() {
                 modalTransaction: !p.modalTransaction,
               }))
             }
-          />
+            fetchData = {fetchDashboard}
+            />
         )}
         {isOpen.modalDetailItem && (
           <TransactionDetailModal
+            fetchData = {fetchDashboard}
             transaction={detailItem}
             clearDataDetailItem={clearDataDetailItem}
             onClose={() => setIsOpen((p) => ({ ...p, modalDetailItem: false }))}

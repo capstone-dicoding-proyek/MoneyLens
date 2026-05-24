@@ -26,7 +26,7 @@ const emptyItem = () => ({
 
 const todayParam = () => new Date().toISOString().split('T')[0];
 
-export default function InputTransactionComponent({ onClose }) {
+export default function InputTransactionComponent({ onClose,fetchData }) {
   const [type, setType] = useState('expense');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -109,6 +109,7 @@ export default function InputTransactionComponent({ onClose }) {
       await createTransaction({ body, type });
       addToast('Transaksi berhasil dibuat!', { type: 'success' });
       onClose();
+      fetchData();
     } catch (err) {
       setError(err?.response?.data?.message ?? 'Gagal menyimpan transaksi');
     } finally {

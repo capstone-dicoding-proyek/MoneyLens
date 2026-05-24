@@ -6,7 +6,7 @@ export class TransactionsRepository {
     databasePool,
     cacheService
   ) {
-    this.client= databasePool;
+    this.client = databasePool;
     this.cache = cacheService;
   }
 
@@ -437,5 +437,15 @@ export class TransactionsRepository {
 
     return response.data;
   }
+
+  async deleteTransaction({ transactionID, userID }) {
+    const query = {
+      text: 'DELETE FROM transactions WHERE user_id = $1 AND id = $2',
+      values: [userID, transactionID]
+    };
+    await this.cache.invalidateUser(userID);
+    await this.client.pool.query(query);
+  }
+
 }
 export default TransactionsRepository;

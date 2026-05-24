@@ -35,6 +35,11 @@ export const transactionsValidatorIncome = Joi.object({
   description: Joi.string().allow('', null)
 });
 
+export const deleteTransactionPayload = Joi.object({
+  userID: Joi.required(),
+  transactionID: Joi.required(),
+});
+
 export const transactionGetQuery = Joi.object({
   range: Joi.valid('week', 'month', 'year').allow('', null),
   startDate: Joi.date().iso().allow('', null),
