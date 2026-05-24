@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { sendResetPassword } from "../api/auth";
-import InputComponent from "../components/InputComponent";
-import useInputs from "../hooks/useInput";
-import { getRemainingCooldown, startCooldown } from "../utils/resend-cooldown";
-import { useToast } from "../hooks/useToast";
-import { formatTime } from "../utils/format-time";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { sendResetPassword } from '../api/auth';
+import InputComponent from '../components/InputComponent';
+import useInputs from '../hooks/useInput';
+import { getRemainingCooldown, startCooldown } from '../utils/resend-cooldown';
+import { useToast } from '../hooks/useToast';
+import { formatTime } from '../utils/format-time';
+import { useNavigate } from 'react-router-dom';
 
-const RESEND_KEY = "resend_reset_password_end_time";
+const RESEND_KEY = 'resend_reset_password_end_time';
 const RESEND_COOLDOWN = 180;
 
 export default function ResetPasswordPage() {
@@ -46,17 +46,17 @@ export default function ResetPasswordPage() {
     setIsResending(true);
     try {
       await sendResetPassword(email);
-      addToast("Email verifikasi telah dikirim", { type: "success" });
+      addToast('Email verifikasi telah dikirim', { type: 'success' });
       startCooldown({
         key: RESEND_KEY,
         duration: RESEND_COOLDOWN,
         setState: setCount,
       });
       startTimer();
-      navigate("/reset-password");
+      navigate('/reset-password');
     } catch (err) {
-      addToast(err?.response?.data?.message || "Gagal mengirim ulang email", {
-        type: "error",
+      addToast(err?.response?.data?.message || 'Gagal mengirim ulang email', {
+        type: 'error',
       });
     } finally {
       setIsResending(false);
@@ -77,14 +77,14 @@ export default function ResetPasswordPage() {
         disabled={count > 0 || isResending}
         style={{
           opacity: count > 0 || isResending ? 0.5 : 1,
-          cursor: count > 0 || isResending ? "not-allowed" : "pointer",
+          cursor: count > 0 || isResending ? 'not-allowed' : 'pointer',
         }}
       >
         {isResending
-          ? "Mengirim..."
+          ? 'Mengirim...'
           : count > 0
             ? `Kirim ulang dalam ${formatTime(count)}`
-            : "Kirim"}
+            : 'Kirim'}
       </button>
     </section>
   );
