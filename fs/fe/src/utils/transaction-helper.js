@@ -18,3 +18,14 @@ export const DETAIL_TYPES = [
 ];
 
 export const HAS_QUANTITY = ['food_drink', 'product'];
+
+
+export const getWarning = (income, expense) => {
+  if (income === 0 && expense === 0) return null;
+  if (income === 0 && expense > 0)
+    return { label: 'Tidak ada pemasukan!', level: 'danger' };
+  const ratio = expense / income;
+  if (ratio >= 0.8) return { label: 'Boros! Hampir habis',     level: 'danger' };
+  if (ratio >= 0.5) return { label: 'Hati-hati, cukup tinggi', level: 'warn'   };
+  return null;
+};
