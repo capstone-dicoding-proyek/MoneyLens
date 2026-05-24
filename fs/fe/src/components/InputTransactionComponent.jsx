@@ -166,7 +166,9 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
 
       <div className="flex-1 overflow-y-auto px-5 pb-2 space-y-3 scrollbar-hide">
         {/* OCR */}
-        <OcrSectionComponent type={type} onOcrResult={handleOcrResult} />
+        {type === 'expense' && (
+          <OcrSectionComponent type={type} onOcrResult={handleOcrResult} />
+        )}
 
         {/*  Income form  */}
         {type === 'income' && (
