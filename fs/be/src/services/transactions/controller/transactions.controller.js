@@ -1,9 +1,7 @@
+import { transactionsRepository } from '../../../container.js';
 import { ClientError } from '../../../exceptions/client-error.js';
 import response from '../../../utils/response.js';
 import { uploadToCloud } from '../../../utils/upload-file.js';
-import { TransactionsRepository } from '../repository/transactions.repository.js';
-
-const transactionsRepository = new TransactionsRepository();
 
 // eslint-disable-next-line no-unused-vars
 export const addTransactionsExpense = async (req, res, next) => {
@@ -70,10 +68,13 @@ export const uploadFileFoto = async (req, res, next) => {
   if (!req.file) {
     return next(new ClientError('No file uploaded'));
   }
+  const result = await transactionsRepository.processOCR(req.file);
+
+  console.log(result);
 
   // const result = await uploadToCloud(req.file);
 
-  return response(res, 200, { tes: 'ok' });
+  return response(res, 200, { result });
 };
 
 // eslint-disable-next-line no-unused-vars

@@ -36,8 +36,9 @@ export default function LoginPage() {
     }, 500);
   };
   const loginGoogle = useGoogleLogin({
-    onSuccess: handleLoginWithGoogle,
+    onSuccess: (token)=>handleLoginWithGoogle(token),
     onError: () => addToast('Login gagal!', { type: 'error' }),
+    flow: 'auth-code',
   });
 
   return (

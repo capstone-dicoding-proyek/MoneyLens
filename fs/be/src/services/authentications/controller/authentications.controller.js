@@ -1,13 +1,10 @@
+import { authenticationsRepository, mailSender, usersRepository } from '../../../container.js';
 import { AuthenticationError, InvariantError, NotFoundError } from '../../../exceptions/error.js';
 import TokenManager from '../../../security/token-manager.js';
-import MailSender from '../../../utils/mail-sender.js';
 import response from '../../../utils/response.js';
-import UsersRepository from '../../users/repository/users.repository.js';
-import { AuthenticationsRepository } from '../repository/authentications.repository.js';
 
-const authenticationsRepository = new AuthenticationsRepository();
-const usersRepository = new UsersRepository();
-const mailSender = new MailSender();
+
+
 
 export const verifyEmail = async (req, res, next) => {
   const { token } = req.validated;
@@ -75,14 +72,9 @@ export const addRefreshToken = async (req, res, next) => {
   return response(res, 200, 'Access Token berhasil diperbarui', { accessToken });
 };
 
+// eslint-disable-next-line no-unused-vars
 export const logout = async (req, res, next) => {
   const { refreshToken } = req.validated;
-
-  const result = await authenticationsRepository.verifyRefreshToken(refreshToken);
-
-  if (!result) {
-    return next(new InvariantError('Refresh token tidak valid'));
-  }
 
   await authenticationsRepository.deleteRefreshToken(refreshToken);
 

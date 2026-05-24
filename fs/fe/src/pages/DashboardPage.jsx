@@ -47,7 +47,7 @@ const PERIOD_RANGE_MAP = {
 
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState(null);
-  const [activePeriod, setActivePeriod] = useState('week');
+  const [activePeriod, setActivePeriod] = useState('month');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [detailItem, setDetailItem] = useState({});
