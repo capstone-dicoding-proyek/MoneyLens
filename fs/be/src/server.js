@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './env.js';
 import express from 'express';
 import './databases/cron-db.js';
 import morgan from 'morgan';
@@ -6,6 +6,7 @@ import cors from 'cors';
 import ErrorHandler from './middlewares/error-handling.js';
 import Routers from './routes.js';
 import './container.js';
+
 
 export const app = express();
 app.use(cors({

@@ -1,5 +1,5 @@
 import { FaCalendarAlt } from 'react-icons/fa';
-import { formatTime } from '../utils/format-time';
+import { formatDate } from '../utils/format-time';
 
 export default function CustomDatePickerComponent({
   customStart,
@@ -35,9 +35,9 @@ export default function CustomDatePickerComponent({
       </button>
       {customStart && customEnd ? (
         <div className="flex  gap-3 *:text-tthird *:text-sm">
-          <p>{formatTime(customStart)}</p>
+          <p>{formatDate(customStart)}</p>
           <span> - </span>
-          <p>{formatTime(customEnd)}</p>
+          <p>{formatDate(customEnd)}</p>
         </div>
       ) : null}
     </div>
