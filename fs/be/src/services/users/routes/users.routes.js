@@ -3,13 +3,14 @@ import {  resetPasswordPayloadValidator, usersValidator, usersValidatorPut } fro
 import validate from '../../../middlewares/validate.js';
 import { getUserLogged, loginWithGoogle, registerUser, resetPassword, updateFullName } from '../controller/users.controller.js';
 import authenticateToken from '../../../middlewares/authenticate-token.js';
+import { googleLoginLimiter, registerLimiter } from '../../../middlewares/rate-limiter.js';
 
 const router = express.Router();
 
-router.post('/users', validate(usersValidator), registerUser);
+router.post('/users', registerLimiter, validate(usersValidator), registerUser);
 
 router.post('/users/reset-password', validate(resetPasswordPayloadValidator), resetPassword);
-router.post('/users/google-login',  loginWithGoogle);
+router.post('/users/google-login', googleLoginLimiter,  loginWithGoogle);
 router.get('/users', authenticateToken, getUserLogged);
 router.put('/users', authenticateToken, validate(usersValidatorPut), updateFullName);
 

@@ -10,7 +10,7 @@ export default function TransactionDetailModal({
   transaction,
   onClose,
   clearDataDetailItem,
-  fetchData
+  fetchData,
 }) {
   const [isDelete, setIsDelete] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,10 @@ export default function TransactionDetailModal({
   const handleDelete = async () => {
     setLoading(true);
     try {
-      await deleteTransaction({ transactionID: transaction.id, userID: user.id });
+      await deleteTransaction({
+        transactionID: transaction.id,
+        userID: user.id,
+      });
       addToast('Transaksi berhasil dihapus!', { type: 'success' });
       onClose();
       fetchData();
@@ -70,8 +73,15 @@ export default function TransactionDetailModal({
         <div
           className={`text-2xl font-bold ${transaction.type === 'income' ? 'text-green-500' : 'text-red-500'}`}
         >
-          {transaction.type === 'income' ? '+' : ''}
-          {formatRupiah(transaction.totalAmount)}
+          <div className="flex flex-col">
+            {Number(transaction.discountAmount) > 0 && transaction.type === 'expense' && (
+              <span className="text-green-500!">
+                -{formatRupiah(Number(transaction.discountAmount))}
+              </span>
+            )}
+            {transaction.type === 'income' ? '+' : ''}
+            {formatRupiah(transaction.totalAmount)}
+          </div>
         </div>
         {transaction.items?.length > 0 && (
           <div className="border-t border-line pt-4 space-y-2">
@@ -118,7 +128,7 @@ export default function TransactionDetailModal({
           >
             {loading ? (
               <>
-                <FaSpinner className="animate-spin" /> Menyimpan...
+                <FaSpinner className="animate-spin" /> Loading...
               </>
             ) : isDelete ? (
               'Lanjutkan'

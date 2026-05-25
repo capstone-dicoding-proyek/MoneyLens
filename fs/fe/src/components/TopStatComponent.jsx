@@ -8,7 +8,7 @@ export default function TopStatComponent({
   type, number, title, isBalancePositive, loading, income = 0, expense = 0,
 }) {
 
-  const warning = type === 'balance' ? getWarning(income, expense) : null;
+  const warning = type === 'balance' && isBalancePositive ? getWarning(income, expense) : null;
   const wStyle  = warning ? WARNING_STYLE[warning.level] : null;
 
   const bgClass =

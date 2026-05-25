@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react';
 import NavbarSide from '../components/NavbarSide';
 import { IoIosNotificationsOutline } from 'react-icons/io';

@@ -25,6 +25,7 @@ export const transactionsValidatorExpense = Joi.object({
     .min(1)
     .required(),
   description: Joi.string().allow('', null),
+  discountAmount:  Joi.number().min(0).default(0),
   transactionDate: Joi.date().required()
 });
 

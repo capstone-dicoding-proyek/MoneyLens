@@ -10,12 +10,10 @@ export default function SummaryCardComponent({
   const isUp      = change > 0;
   const isNeutral = change === 0;
 
-  // Warning hanya kalau balance card (balance prop di-pass)
-  const warning = balance !== undefined ? getWarning(income, expense) : null;
+  const warning = balance !== undefined && balance >= 0 ? getWarning(income, expense) : null;
   const wStyle  = warning ? WARNING_STYLE[warning.level] : null;
   const numberColor = wStyle ? wStyle.text : colorClass;
 
-  // bg: warning override → balance default → putih
   const bgClass = wStyle
     ? wStyle.bg
     : balance !== undefined
@@ -29,7 +27,6 @@ export default function SummaryCardComponent({
       {loading ? (
         <div className="h-9 bg-gray-100 rounded-lg animate-pulse w-36" />
       ) : (
-        // ✅ pakai colorClass dari parent langsung
         <div className={`text-3xl font-bold ${numberColor}`}>
           {formatRupiah(amount)}
         </div>
