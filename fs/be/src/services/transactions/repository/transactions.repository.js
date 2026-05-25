@@ -21,6 +21,7 @@ export class TransactionsRepository {
     type,
     transactionDate,
     items,
+    discountAmount,
     description = null
   }) {
 
@@ -28,7 +29,7 @@ export class TransactionsRepository {
     try {
       const transactionQuery = {
         text: `
-        INSERT INTO transactions (id, user_id, total_amount, type,  description , transaction_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
+        INSERT INTO transactions (id, user_id, total_amount, type,  description, discount_amount, transaction_date) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
       `,
         values: [
           `transactions-${nanoid()}`,
@@ -36,7 +37,8 @@ export class TransactionsRepository {
           totalAmount,
           type,
           description,
-          transactionDate,
+          discountAmount,
+          transactionDate
         ],
       };
 
@@ -358,6 +360,7 @@ export class TransactionsRepository {
       text: `
       SELECT
         t.id,
+        t.discount_amount,
         t.total_amount,
         t.type,
         t.transaction_date,
@@ -392,6 +395,7 @@ export class TransactionsRepository {
       id: r.id,
       description: r.description,
       nameIncome: r.name_income,
+      discountAmount: Number(r.discount_amount),
       totalAmount: Number(r.total_amount),
       type: r.type,
       transactionDate: r.transaction_date,

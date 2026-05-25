@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sendResetPassword } from '../api/auth';
 import InputComponent from '../components/InputComponent';
@@ -34,6 +35,7 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const remaining = getRemainingCooldown(RESEND_KEY);
     if (remaining > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCount(remaining);
       startTimer();
     }

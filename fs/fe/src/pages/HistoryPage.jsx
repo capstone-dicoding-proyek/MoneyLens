@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import LayoutMainContent from '../components/LayoutMainContent';
@@ -374,10 +375,9 @@ export default function HistoryPage() {
             colorClass={
               summary.balance >= 0 ? 'text-green-600' : 'text-red-600'
             }
-            bgClass={summary.balance >= 0 ? 'bg-green-50' : 'bg-red-50'}
-            borderClass={
-              summary.balance >= 0 ? 'border-green-200' : 'border-red-200'
-            }
+            balance={summary.balance}
+            income={summary.income}
+            expense={summary.expense}
             loading={loading}
           />
         </div>

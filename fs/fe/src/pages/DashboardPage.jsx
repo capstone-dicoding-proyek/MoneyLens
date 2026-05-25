@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from 'react';
 import NavbarSide from '../components/NavbarSide';
 import { IoIosNotificationsOutline } from 'react-icons/io';
@@ -66,8 +67,9 @@ export default function DashboardPage() {
     try {
       const res = await getTransactionDashboard(params);
       setDashboard(res.data);
-    // eslint-disable-next-line no-unused-vars, no-empty
-    } catch (err) {} finally {
+      // eslint-disable-next-line no-unused-vars, no-empty
+    } catch (err) {
+    } finally {
       setLoading(false);
     }
   }, []);
@@ -125,12 +127,12 @@ export default function DashboardPage() {
                 modalTransaction: !p.modalTransaction,
               }))
             }
-            fetchData = {fetchDashboard}
+            fetchData={fetchDashboard}
           />
         )}
         {isOpen.modalDetailItem && (
           <TransactionDetailModal
-            fetchData = {fetchDashboard}
+            fetchData={fetchDashboard}
             transaction={detailItem}
             clearDataDetailItem={clearDataDetailItem}
             onClose={() => setIsOpen((p) => ({ ...p, modalDetailItem: false }))}
@@ -216,6 +218,8 @@ export default function DashboardPage() {
             title="Pengeluaran"
             type="pengeluaran"
             loading={loading}
+            income={summary.income}
+            expense={summary.expense}
           />
           <TopStatComponent
             number={summary.income}
@@ -229,6 +233,8 @@ export default function DashboardPage() {
             type="balance"
             isBalancePositive={(summary.balance ?? 0) >= 0}
             loading={loading}
+            income={summary.income}
+            expense={summary.expense}
           />
         </div>
 

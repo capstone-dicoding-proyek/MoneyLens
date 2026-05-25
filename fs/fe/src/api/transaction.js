@@ -7,8 +7,8 @@ export const createTransaction = async ({ type, body }) => {
     const res = await api.post('/transactions/income', { description, nameIncome, totalAmount, transactionDate });
     return res.data;
   } else {
-    const { description, items, transactionDate } = body;
-    const res = await api.post('/transactions/expense', { description, items, transactionDate });
+    const { description, items, transactionDate, discountAmount } = body;
+    const res = await api.post('/transactions/expense', { description, items, discountAmount, transactionDate });
     return res.data;
   }
 };

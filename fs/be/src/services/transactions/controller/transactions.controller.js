@@ -6,23 +6,25 @@ import { uploadToCloud } from '../../../utils/upload-file.js';
 
 // eslint-disable-next-line no-unused-vars
 export const addTransactionsExpense = async (req, res, next) => {
-  const { items, transactionDate, description } = req.validated;
+  const { items, transactionDate, description, discountAmount } = req.validated;
   const { id } = req.user;
 
-  const totalAmount = items.reduce((acc, item) => {
+  const subtotal = items.reduce((acc, item) => {
     const quantity =
       item.detailType === 'product' || item.detailType === 'food_drink'
         ? Number(item.quantity)
         : 1;
-
-    return acc + (quantity * Number(item.unitPrice));
+    return acc + quantity * Number(item.unitPrice);
   }, 0);
+
+  const totalAmount = Math.max(0, subtotal - Number(discountAmount));
 
   await transactionsRepository.createTransactionWithDetails({
     userID: id,
     description,
     totalAmount,
     type: 'expense',
+    discountAmount: Number(discountAmount),
     transactionDate: transactionDate,
     items,
   });
@@ -109,7 +111,7 @@ export const uploadFileFoto = async (req, res, next) => {
   await uploadToCloud(req.file);
 
 
-  return response(res, 200, {  data  });
+  return response(res, 200, { data });
 };
 
 // eslint-disable-next-line no-unused-vars

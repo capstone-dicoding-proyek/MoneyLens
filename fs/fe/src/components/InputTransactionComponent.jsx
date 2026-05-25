@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import {
-  IoClose,
-  IoCamera,
-  IoCloudUploadOutline,
   IoAdd,
-  IoTrashOutline,
   IoReceiptOutline,
   IoWalletOutline,
 } from 'react-icons/io5';
@@ -31,23 +27,28 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { addToast } = useToast();
+
   const [income, setIncome] = useState({
     totalAmount: '',
     transactionDate: todayParam(),
     nameIncome: '',
     description: '',
   });
-
   const [expense, setExpense] = useState({
     transactionDate: todayParam(),
     description: '',
   });
   const [items, setItems] = useState([emptyItem()]);
+  const [discount, setDiscount] = useState({ type: 'rupiah', value: '' });
+
+  const addItem = () => setItems((prev) => [...prev, emptyItem()]);
+  const removeItem = (id) => setItems((prev) => prev.filter((it) => it.id !== id));
+  const updateItem = (id, updated) =>
+    setItems((prev) => prev.map((it) => (it.id === id ? updated : it)));
 
   const handleOcrResult = (response) => {
     const data = response.message.data[0];
     if (!data) return;
-
     if (data.items?.length) {
       setItems(
         data.items.map((item) => ({
@@ -56,10 +57,9 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
           name: item.name ?? '',
           quantity: item.quantity ?? 1,
           unitPrice: item.unitPrice ?? '',
-        })),
+        }))
       );
     }
-
     setExpense((prev) => ({
       ...prev,
       ...(data.description && { description: data.description }),
@@ -69,11 +69,31 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
     }));
   };
 
-  const addItem = () => setItems((prev) => [...prev, emptyItem()]);
-  const removeItem = (id) =>
-    setItems((prev) => prev.filter((it) => it.id !== id));
-  const updateItem = (id, updated) =>
-    setItems((prev) => prev.map((it) => (it.id === id ? updated : it)));
+  const subtotal =
+    type === 'expense' ? calcGrandTotal(items) : Number(income.totalAmount) || 0;
+
+
+  const discountAmount = (() => {
+    const raw = Number(discount.value) || 0;
+    if (subtotal <= 0 || raw <= 0) return 0;
+    const amount =
+      discount.type === 'persen'
+        ? Math.round((subtotal * Math.min(raw, 100)) / 100)
+        : raw;
+    return Math.min(amount, subtotal);
+  })();
+
+  const grandTotal = subtotal - discountAmount;
+
+  const handleDiscountChange = (val) => {
+    if (discount.type === 'persen') {
+      if (Number(val) > 100) val = '100';
+    } else {
+      if (Number(val) > subtotal) val = String(subtotal);
+    }
+    if (Number(val) < 0) val = '0';
+    setDiscount((prev) => ({ ...prev, value: val }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -102,6 +122,7 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
           : {
             transactionDate: expense.transactionDate,
             description: expense.description,
+            discountAmount,
             items: items.map((it) => ({
               detailType: it.detailType,
               name: it.name,
@@ -123,27 +144,19 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
     }
   };
 
-  const grandTotal =
-    type === 'expense'
-      ? calcGrandTotal(items)
-      : Number(income.totalAmount) || 0;
-
   return (
     <ModalLayoutInputAndProfil title="Catat Transaksi" onClose={onClose}>
-      {/*  Modal header  */}
-
-      {/* Type toggle  */}
+      {/* Type toggle */}
       <div className="px-5 pb-3 flex-shrink-0">
         <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
           <button
             type="button"
             onClick={() => setType('expense')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition
-                ${
-    type === 'expense'
-      ? 'bg-white text-red-500 shadow-sm'
-      : 'text-tthird hover:text-black'
-    }`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition ${
+              type === 'expense'
+                ? 'bg-white text-red-500 shadow-sm'
+                : 'text-tthird hover:text-black'
+            }`}
           >
             <IoReceiptOutline />
             Pengeluaran
@@ -151,12 +164,11 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
           <button
             type="button"
             onClick={() => setType('income')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition
-                ${
-    type === 'income'
-      ? 'bg-white text-primary shadow-sm'
-      : 'text-tthird hover:text-black'
-    }`}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition ${
+              type === 'income'
+                ? 'bg-white text-primary shadow-sm'
+                : 'text-tthird hover:text-black'
+            }`}
           >
             <IoWalletOutline />
             Pemasukan
@@ -165,29 +177,25 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 pb-2 space-y-3 scrollbar-hide">
-        {/* OCR */}
         {type === 'expense' && (
           <OcrSectionComponent type={type} onOcrResult={handleOcrResult} />
         )}
 
-        {/*  Income form  */}
+        {/* Income form */}
         {type === 'income' && (
           <div className="space-y-3">
             <div>
               <label className="text-xs font-semibold text-tthird mb-1 block">
-                Nama Pemasukan(opsional) <span className="text-red-400">*</span>
+                Nama Pemasukan <span className="text-xs font-normal">(opsional)</span>
               </label>
               <input
                 type="text"
                 placeholder="Gaji, freelance, dll..."
                 value={income.nameIncome}
-                onChange={(e) =>
-                  setIncome({ ...income, nameIncome: e.target.value })
-                }
+                onChange={(e) => setIncome({ ...income, nameIncome: e.target.value })}
                 className="w-full border border-line rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
               />
             </div>
-
             <div>
               <label className="text-xs font-semibold text-tthird mb-1 block">
                 Nominal <span className="text-red-400">*</span>
@@ -201,14 +209,11 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
                   min="0"
                   placeholder="0"
                   value={income.totalAmount}
-                  onChange={(e) =>
-                    setIncome({ ...income, totalAmount: e.target.value })
-                  }
+                  onChange={(e) => setIncome({ ...income, totalAmount: e.target.value })}
                   className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
                 />
               </div>
             </div>
-
             <div>
               <label className="text-xs font-semibold text-tthird mb-1 block">
                 Tanggal <span className="text-red-400">*</span>
@@ -216,23 +221,16 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
               <input
                 type="date"
                 value={income.transactionDate}
-                onChange={(e) =>
-                  setIncome({ ...income, transactionDate: e.target.value })
-                }
+                onChange={(e) => setIncome({ ...income, transactionDate: e.target.value })}
                 className="w-full border border-line rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
               />
             </div>
-
             <div>
-              <label className="text-xs font-semibold text-tthird mb-1 block">
-                Catatan
-              </label>
+              <label className="text-xs font-semibold text-tthird mb-1 block">Catatan</label>
               <textarea
                 placeholder="Keterangan tambahan..."
                 value={income.description}
-                onChange={(e) =>
-                  setIncome({ ...income, description: e.target.value })
-                }
+                onChange={(e) => setIncome({ ...income, description: e.target.value })}
                 rows={2}
                 className="w-full border border-line rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary resize-none"
               />
@@ -240,7 +238,7 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
           </div>
         )}
 
-        {/*  Expense form */}
+        {/* Expense form */}
         {type === 'expense' && (
           <div className="space-y-3">
             <div className="flex gap-2">
@@ -258,9 +256,7 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
                 />
               </div>
               <div className="flex-1">
-                <label className="text-xs font-semibold text-tthird mb-1 block">
-                  Catatan
-                </label>
+                <label className="text-xs font-semibold text-tthird mb-1 block">Catatan</label>
                 <input
                   type="text"
                   placeholder="Opsional..."
@@ -287,7 +283,6 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
                   <IoAdd className="text-base" /> Tambah Item
                 </button>
               </div>
-
               {items.map((item, i) => (
                 <ItemRowTransactionComponent
                   key={item.id}
@@ -298,11 +293,62 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
                 />
               ))}
             </div>
+
+            {/* Diskon */}
+            <div>
+              <label className="text-xs font-semibold text-tthird mb-1 block">
+                Diskon <span className="text-xs font-normal">(opsional)</span>
+              </label>
+              <div className="flex bg-gray-100 rounded-xl p-1 gap-1 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setDiscount({ type: 'rupiah', value: '' })}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition ${
+                    discount.type === 'rupiah'
+                      ? 'bg-white text-red-500 shadow-sm'
+                      : 'text-tthird hover:text-black'
+                  }`}
+                >
+                  Rupiah (Rp)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDiscount({ type: 'persen', value: '' })}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition ${
+                    discount.type === 'persen'
+                      ? 'bg-white text-primary shadow-sm'
+                      : 'text-tthird hover:text-black'
+                  }`}
+                >
+                  Persen (%)
+                </button>
+              </div>
+              <div className="flex items-center border border-line rounded-xl overflow-hidden focus-within:border-primary">
+                <span className="px-3 py-2.5 text-sm text-tthird bg-gray-50 border-r border-line">
+                  {discount.type === 'rupiah' ? 'Rp' : '%'}
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  max={discount.type === 'persen' ? 100 : subtotal}
+                  placeholder="0"
+                  value={discount.value}
+                  onChange={(e) => handleDiscountChange(e.target.value)}
+                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
+                />
+                {/* Preview konversi kalau persen */}
+                {discount.type === 'persen' && discountAmount > 0 && (
+                  <span className="px-3 text-xs text-tthird whitespace-nowrap">
+                    = Rp {discountAmount.toLocaleString('id-ID')}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
 
-      {/*    Submit  */}
+      {/* Submit */}
       <div className="flex-shrink-0 border-t border-line px-5 py-4 space-y-3">
         {error && (
           <div className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -310,13 +356,29 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
           </div>
         )}
 
+        {type === 'expense' && discountAmount > 0 && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-tthird">Subtotal</span>
+              <span className="text-sm text-tthird">
+                Rp {subtotal.toLocaleString('id-ID')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-tthird">
+                Diskon{discount.type === 'persen' ? ` ${discount.value}%` : ''}
+              </span>
+              <span className="text-sm font-medium text-primary">
+                - Rp {discountAmount.toLocaleString('id-ID')}
+              </span>
+            </div>
+          </>
+        )}
+
         <div className="flex items-center justify-between">
           <span className="text-sm text-tthird font-medium">Total</span>
-          <span
-            className={`text-xl font-bold ${type === 'income' ? 'text-primary' : 'text-red-500'}`}
-          >
-            {type === 'income' ? '+' : '-'}Rp{' '}
-            {grandTotal.toLocaleString('id-ID')}
+          <span className={`text-xl font-bold ${type === 'income' ? 'text-primary' : 'text-red-500'}`}>
+            {type === 'income' ? '+' : '-'}Rp {grandTotal.toLocaleString('id-ID')}
           </span>
         </div>
 
