@@ -1,0 +1,27 @@
+{
+  "model_name": "MoneyLens_OCR",
+  "architecture": "CNN(32-64-128) + BiLSTM(128-64) + CTC",
+  "num_classes": 86,
+  "blank_index": 0,
+  "padding_value": -1,
+  "training": {
+    "epochs_trained": 73,
+    "best_val_loss": 46.57327586206897,
+    "batch_size": 32,
+    "learning_rate": 0.0001,
+    "bugs_fixed": [
+      "blank_index=0 konsisten di seluruh pipeline",
+      "padding_value=-1 (bukan NUM_CLASSES)",
+      "compute_metrics index mapping diperbaiki",
+      "softmax sebelum ctc_decode",
+      "build_inference_model robust via get_layer()",
+      "LR 1e-3 -> 1e-4 + ReduceLROnPlateau"
+    ]
+  },
+  "data": {
+    "train_samples": 3172,
+    "valid_samples": 915,
+    "test_samples": 422,
+    "ground_truth": "/home/hasan/coding/MoneyLens/ai/Dataset_ocr/preprocessed/ground_truth_auto.csv"
+  }
+}
