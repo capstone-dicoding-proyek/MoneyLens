@@ -171,13 +171,9 @@ export default function OcrSectionComponent({ onOcrResult }) {
           {error}
         </div>
       )}
-      <div className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-        Ocr stay tune
-      </div>
       {!showCamera && !preview && (
         <div className="flex gap-2">
           <button
-            disabled
             type="button"
             onClick={openCamera}
             className="flex-1 flex items-center justify-center gap-1.5 border border-line rounded-lg py-2 text-sm text-tthird hover:border-primary hover:text-primary transition"
@@ -185,7 +181,6 @@ export default function OcrSectionComponent({ onOcrResult }) {
             <IoCamera /> Kamera
           </button>
           <button
-            disabled
             type="button"
             onClick={() => fileRef.current?.click()}
             className="flex-1 flex items-center justify-center gap-1.5 border border-line rounded-lg py-2 text-sm text-tthird hover:border-primary hover:text-primary transition"
