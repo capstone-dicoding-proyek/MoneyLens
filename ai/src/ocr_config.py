@@ -8,10 +8,16 @@ CHARACTERS = list(
     "0123456789"
     "abcdefghijklmnopqrstuvwxyz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    " .,:-/()%"
+    " .,:-/()%*'&#_@\"!+=[]]|×"
 )
 
+seen = set()
+CHARACTERS = [c for c in CHARACTERS if not (c in seen or seen.add(c))]
+
+BLANK_INDEX = 0
 NUM_CLASSES = len(CHARACTERS) + 1
+
+PADDING_VALUE = -1
 
 CLASS_LABELS = [
     "QTY",
