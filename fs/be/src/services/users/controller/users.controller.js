@@ -1,15 +1,11 @@
-import { OAuth2Client } from 'google-auth-library';
+import 'dotenv/config';
 import { ForbiddenError, InvariantError, NotFoundError } from '../../../exceptions/error.js';
 import TokenManager from '../../../security/token-manager.js';
-import MailSender from '../../../utils/mail-sender.js';
 import response from '../../../utils/response.js';
-import AuthenticationsRepository from '../../authentications/repository/authentications.repository.js';
-import { UsersRepository } from '../repository/users.repository.js';
+import { authenticationsRepository, client, mailSender, usersRepository } from '../../../container.js';
 
-const usersRepository = new UsersRepository();
-const mailSender = new MailSender();
-const authenticationsRepository = new AuthenticationsRepository();
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+
 
 
 export const registerUser = async (req, res, next) => {
@@ -60,10 +56,21 @@ export const resetPassword = async (req, res, next) => {
 };
 
 export const loginWithGoogle = async (req, res, next) => {
-  const { token } = req.body;
+  console.log(process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.URLFE
+  );
 
+  console.log(req.body);
+  const { code } = req.body;
+  const { tokens } = await client.getToken(code);
+  const idToken = tokens.id_token;
+
+  if (!idToken) {
+    return next(new InvariantError('Token Google tidak valid'));
+  }
   const ticket = await client.verifyIdToken({
-    idToken: token,
+    idToken: idToken,
     audience: process.env.GOOGLE_CLIENT_ID,
   });
   const payload = ticket.getPayload();
@@ -110,4 +117,13 @@ export const getUserLogged = async (req, res, next) => {
   // eslint-disable-next-line no-unused-vars
   const { password, ...data } = result;
   return response(res, 200, 'User logged success', { data });
+};
+
+// eslint-disable-next-line no-unused-vars
+export const updateFullName = async (req, res, next) => {
+  const { id } = req.user;
+  const { fullname } = req.validated;
+  await usersRepository.updateFullName({ fullname, userID: id });
+
+  return response(res, 200, 'Update user success');
 };

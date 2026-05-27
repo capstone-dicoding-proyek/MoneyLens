@@ -88,11 +88,11 @@ export default function RegisterPage() {
           </Link>
         </div>
 
-        <div className="font-bold text-primary text-5xl mt-14 max-sm:text-4xl max-sm:mt-10">
+        <div className="font-bold text-primary text-5xl mt-14 max-sm:text-4xl max-sm:mt-10 md:text-4xl md:mt-4">
           Daftar
         </div>
 
-        <div className="text-tthird font-light text-sm mt-8 max-sm:mt-4">
+        <div className="text-tthird font-light text-sm mt-8 md:mt-4 max-sm:mt-4 md:text-sm">
           Silakan daftar untuk mulai mengelola dan mencatat keuangan Anda.
         </div>
 
@@ -106,7 +106,7 @@ export default function RegisterPage() {
             leftIcon={FaUser}
           />
           <InputComponent
-            type="text"
+            type="email"
             placeholder="Email"
             value={email}
             onChangeValue={onChangeEmail}
@@ -123,8 +123,8 @@ export default function RegisterPage() {
             leftIcon={FaLock}
           />
 
-          <div className="-space-x-4 ">
-            <ul className="ml-4 space-y-2 text-xs text-tthird list-disc">
+          <div className="-space-x-4 md:-space-x-2">
+            <ul className="ml-4 space-y-2 md:space-y-0 text-xs text-tthird list-disc">
               <li>Password harus minimal 8 karakter</li>
               <li>
                 Harus mengandung huruf besar, huruf kecil, angka,
@@ -149,6 +149,7 @@ export default function RegisterPage() {
 
         <div className="flex items-center gap-20 mt-10 max-sm:mt-6">
           <ButtonComponent
+            isLoading={isLoading}
             onClick={onSubmitRegister}
             title='Submit'
           />

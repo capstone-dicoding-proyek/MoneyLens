@@ -26,13 +26,22 @@ export const up = (pgm) => {
             type: 'BIGINT',
             notNull: true
         },
+        discount_amount: {
+            type: 'BIGINT',
+        },
         type: {
             type: 'transaction_type',
-            notNull: true   
+            notNull: true
         },
         transaction_date: {
             type: 'TIMESTAMP',
             notNull: true
+        },
+        name_income: {
+            type: 'TEXT'
+        },
+        description: {
+            type: 'TEXT'
         },
         created_at: {
             type: 'TIMESTAMP',

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 import FormAuthComponent from '../components/FormAuthComponent';
 import InputComponent from '../components/InputComponent';
@@ -35,8 +36,9 @@ export default function LoginPage() {
     }, 500);
   };
   const loginGoogle = useGoogleLogin({
-    onSuccess: handleLoginWithGoogle,
+    onSuccess: (token)=>handleLoginWithGoogle(token),
     onError: () => addToast('Login gagal!', { type: 'error' }),
+    flow: 'auth-code',
   });
 
   return (

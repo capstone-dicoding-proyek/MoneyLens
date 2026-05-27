@@ -14,11 +14,6 @@ cron.schedule('*/5 * * * *', async () => {
         DELETE FROM reset_password
         WHERE expired_at < NOW()
       `),
-
-      db.pool.query(`
-        DELETE FROM authentications
-        WHERE expired_at < NOW()
-      `)
     ]);
 
     console.log('Cleanup success');

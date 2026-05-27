@@ -10,6 +10,7 @@ export const shorthands = undefined;
  */
 export const up = (pgm) => {
     pgm.createType('transaction_detail_type', [
+        'food_drink',
         'product',
         'service',
         'fee',
