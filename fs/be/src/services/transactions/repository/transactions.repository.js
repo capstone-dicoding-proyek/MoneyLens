@@ -1,31 +1,44 @@
-
+import 'dotenv/config';
 import { nanoid } from 'nanoid';
-import DatabasePool from '../../../databases/database-pool.js';
-export class TransactionsRepository extends DatabasePool {
+import axios from 'axios';
+export class TransactionsRepository {
+  constructor(
+    databasePool,
+    cacheService
+  ) {
+    this.client = databasePool;
+    this.cache = cacheService;
+  }
+
+  _buildKey(prefix, userID, { range = 'all', startDate = '', endDate = '' } = {}) {
+    return `${prefix}:${userID}:${range}:${startDate}:${endDate}`;
+  }
+
+
   async createTransactionWithDetails({
     userID,
     totalAmount,
     type,
     transactionDate,
     items,
+    discountAmount,
+    description = null
   }) {
-    const client = await this.pool.connect();
 
+    const client = await this.client.pool.connect();
     try {
-      await client.query('BEGIN');
       const transactionQuery = {
         text: `
-        INSERT INTO transactions
-        (id, user_id, total_amount, type, transaction_date)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id
+        INSERT INTO transactions (id, user_id, total_amount, type,  description, discount_amount, transaction_date) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
       `,
         values: [
           `transactions-${nanoid()}`,
           userID,
           totalAmount,
           type,
-          transactionDate,
+          description,
+          discountAmount,
+          transactionDate
         ],
       };
 
@@ -33,23 +46,18 @@ export class TransactionsRepository extends DatabasePool {
 
       const transactionID = transactionResult.rows[0].id;
       for (const item of items) {
-        const quantity =
-    item.detailType === 'product'
-      ? Number(item.quantity)
-      : null;
+        const quantity = item.detailType === 'product' || item.detailType === 'food_drink' ? Number(item.quantity) : null;
 
         const unitPrice = Number(item.unitPrice);
 
         const totalPrice =
-    item.detailType === 'product'
-      ? quantity * unitPrice
-      : unitPrice;
+          item.detailType === 'product' || item.detailType === 'food_drink'
+            ? quantity * unitPrice
+            : unitPrice;
 
         const detailQuery = {
           text: `
-      INSERT INTO transaction_details
-      (id, transaction_id, detail_type, name, quantity, unit_price, total_price)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO transaction_details (id, transaction_id, detail_type, name, quantity, unit_price, total_price) VALUES ($1, $2, $3, $4, $5, $6, $7)
     `,
           values: [
             `transaction-details-${nanoid()}`,
@@ -66,7 +74,7 @@ export class TransactionsRepository extends DatabasePool {
       }
 
       await client.query('COMMIT');
-
+      await this.cache.invalidateUser(userID);
       return transactionID;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -81,24 +89,29 @@ export class TransactionsRepository extends DatabasePool {
     totalAmount,
     type,
     transactionDate,
+    nameIncome = null,
+    description = null
   }) {
 
     const query = {
       text: `
         INSERT INTO transactions
-        (id, user_id, total_amount, type, transaction_date)
-        VALUES ($1, $2, $3, $4, $5)
+        (id, user_id, total_amount, name_income,description ,type, transaction_date)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id
       `,
       values: [
         `transactions-${nanoid()}`,
         userID,
         totalAmount,
+        nameIncome,
+        description,
         type,
         transactionDate,
       ],
     };
-    const result = await this.pool.query(query);
+    const result = await this.client.pool.query(query);
+    await this.cache.invalidateUser(userID);
     return result.rows[0].id;
   }
 
@@ -108,11 +121,12 @@ export class TransactionsRepository extends DatabasePool {
     startDate,
     endDate,
   }) {
-
+    const cacheKey = this._buildKey('dashboard', userID, { range, startDate, endDate });
     let whereClause = `
     WHERE user_id = $1
   `;
-
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
     const values = [userID];
 
     if (startDate && endDate) {
@@ -156,20 +170,23 @@ export class TransactionsRepository extends DatabasePool {
       values,
     };
 
-    const result = await this.pool.query(query);
+    const result = await this.client.pool.query(query);
+
 
     const income = Number(result.rows[0].income);
     const expense = Number(result.rows[0].expense);
+    const data = { income, expense, balance: income - expense };
 
-    return {
-      income,
-      expense,
-      balance: income - expense,
-    };
+    await this.cache.set(cacheKey, data, 300);
+    return data;
   }
 
   async getChart({ userID, range = 'all', startDate, endDate }) {
     const values = [userID];
+    const cacheKey = this._buildKey('chart', userID, { range, startDate, endDate });
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
 
     let dateFilter = '';
     let label;
@@ -240,13 +257,195 @@ export class TransactionsRepository extends DatabasePool {
       values,
     };
 
-    const result = await this.pool.query(query);
+    const result = await this.client.pool.query(query);
 
-    return result.rows.map((row) => ({
+    const data = result.rows.map((row) => ({
       label: row.label,
       income: Number(row.income),
       expense: Number(row.expense),
     }));
+
+    await this.cache.set(cacheKey, data, 300);
+    return data;
+  }
+
+  async getCategoryBreakdown({ userID, range = 'all', startDate, endDate }) {
+    const cacheKey = this._buildKey('category', userID, { range, startDate, endDate });
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const values = [userID];
+    let dateFilter = '';
+
+    if (startDate && endDate) {
+      dateFilter = 'AND t.transaction_date BETWEEN $2 AND $3';
+      values.push(startDate, endDate);
+    } else if (range === 'week') {
+      dateFilter = "AND t.transaction_date >= NOW() - INTERVAL '7 days'";
+    } else if (range === 'month') {
+      dateFilter = "AND t.transaction_date >= NOW() - INTERVAL '30 days'";
+    } else if (range === 'year') {
+      dateFilter = "AND t.transaction_date >= NOW() - INTERVAL '1 year'";
+    }
+
+    const result = await this.client.pool.query({
+      text: `
+      SELECT
+        td.detail_type,
+        SUM(td.total_price) AS total
+      FROM transaction_details td
+      JOIN transactions t ON t.id = td.transaction_id
+      WHERE t.user_id = $1
+        AND t.type = 'expense'
+        ${dateFilter}
+      GROUP BY td.detail_type
+      ORDER BY total DESC
+    `,
+      values,
+    });
+
+    const totalExpense = result.rows.reduce((sum, r) => sum + Number(r.total), 0);
+
+    const data = result.rows.map((r) => ({
+      detailType: r.detail_type,
+      total: Number(r.total),
+      percent: totalExpense > 0
+        ? Math.round((Number(r.total) / totalExpense) * 100)
+        : 0,
+    }));
+
+    await this.cache.set(cacheKey, data, 300);
+    return data;
+  }
+
+
+  async getHistory({ userID, startDate, endDate, search, type, page = 1, limit = 50 }) {
+    const values = [userID];
+    let dateFilter = '';
+    let searchFilter = '';
+    let typeFilter = '';
+
+    if (startDate && endDate) {
+      dateFilter = `AND t.transaction_date BETWEEN $${values.length + 1} AND $${values.length + 2}`;
+      values.push(startDate, endDate);
+    }
+
+    if (type && ['income', 'expense'].includes(type)) {
+      typeFilter = `AND t.type = $${values.length + 1}`;
+      values.push(type);
+    }
+
+    if (search) {
+      searchFilter = `
+      AND (
+        t.name_income ILIKE $${values.length + 1}
+        OR t.description ILIKE $${values.length + 1}
+        OR EXISTS (
+          SELECT 1 FROM transaction_details td2
+          WHERE td2.transaction_id = t.id
+          AND td2.name ILIKE $${values.length + 1}
+        )
+      )
+    `;
+      values.push(`%${search}%`);
+    }
+
+    const limitIdx = values.length + 1;
+    const offsetIdx = values.length + 2;
+    const offset = (page - 1) * limit;
+    values.push(limit, offset);
+
+    const result = await this.client.pool.query({
+      text: `
+      SELECT
+        t.id,
+        t.discount_amount,
+        t.total_amount,
+        t.type,
+        t.transaction_date,
+        t.name_income,
+        t.description,
+        COALESCE(
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'detailType', td.detail_type,
+              'name',       td.name,
+              'quantity',   td.quantity,
+              'unitPrice',  td.unit_price,
+              'totalPrice', td.total_price
+            )
+          ) FILTER (WHERE td.id IS NOT NULL),
+          '[]'
+        ) AS items
+      FROM transactions t
+      LEFT JOIN transaction_details td ON td.transaction_id = t.id
+      WHERE t.user_id = $1
+        ${dateFilter}
+        ${typeFilter}
+        ${searchFilter}
+      GROUP BY t.id, t.total_amount, t.type, t.transaction_date, t.name_income, t.description
+      ORDER BY t.transaction_date DESC
+      LIMIT $${limitIdx} OFFSET $${offsetIdx}
+    `,
+      values,
+    });
+
+    return result.rows.map((r) => ({
+      id: r.id,
+      description: r.description,
+      nameIncome: r.name_income,
+      discountAmount: Number(r.discount_amount),
+      totalAmount: Number(r.total_amount),
+      type: r.type,
+      transactionDate: r.transaction_date,
+      items: r.items,
+    }));
+  }
+
+  async getAvailableYears({ userID }) {
+    const cacheKey = `years:${userID}`;
+
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.client.pool.query({
+      text: `
+      SELECT DISTINCT EXTRACT(YEAR FROM transaction_date)::INT AS year
+      FROM transactions
+      WHERE user_id = $1
+      ORDER BY year DESC
+    `,
+      values: [userID],
+    });
+
+    const data = result.rows.map((r) => r.year);
+
+    await this.cache.set(cacheKey, data, 3600);
+  }
+  async processOCR(file) {
+    const formData = new FormData();
+    formData.append(
+      'image',
+      new Blob([file.buffer]),
+      file.originalname
+    );
+
+    const response = await axios.post(
+      `${process.env.URLAI}/ocr`,
+      formData,
+    );
+
+    return response.data;
+  }
+
+  async deleteTransaction({ transactionID, userID }) {
+    const query = {
+      text: 'DELETE FROM transactions WHERE user_id = $1 AND id = $2',
+      values: [userID, transactionID]
+    };
+    await this.cache.invalidateUser(userID);
+    await this.client.pool.query(query);
   }
 
 }

@@ -35,3 +35,35 @@ export const resetPasswordLimiter = createRateLimiter({
   prefix: 'reset-password',
   message: 'Tunggu 3 menit sebelum request reset password',
 });
+
+export const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { status: 'fail', message: 'Too many login attempts, try again in 15 minutes' }
+});
+
+export const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: { status: 'fail', message: 'Too many register attempts, try again in 1 hour' }
+});
+
+export const googleLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { status: 'fail', message: 'Too many requests, try again in 15 minutes' }
+});
+
+export const transactionLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  message: { status: 'fail', message: 'Too many requests, slow down!' }
+});
+
+
+export const uploadOcrLimiter = createRateLimiter({
+  prefix: 'upload-ocr',
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: 'Tunggu 1 jam sebelum upload lagi',
+});

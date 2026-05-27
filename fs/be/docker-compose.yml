@@ -1,0 +1,67 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: moneylens-postgres
+    restart: unless-stopped
+    env_file: .env.docker
+    environment:
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+      POSTGRES_DB: ${PGDATABASE}
+    ports:
+      - "${PGPORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER} -d ${PGDATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - moneylens-network
+
+
+  redis:
+    image: redis:8.4-alpine
+    container_name: moneylens-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - moneylens-network
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: moneylens-api
+    restart: unless-stopped
+    env_file: .env.docker
+    ports:
+      - "${PORT:-5000}:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - moneylens-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  moneylens-network:
+    driver: bridge

@@ -1,10 +1,12 @@
-import { clearTokens, putTokens } from '../utils/local-storage';
+import { clearTokens, getRefreshToken, putTokens } from '../utils/local-storage';
 import { api } from './axios-instance';
 
 export const login = async ({ email, password }) => {
   const response = await api.post('/auth', { email, password });
   const { accessToken, refreshToken } = response.data.data;
   putTokens({ accessToken, refreshToken });
+  console.log(response);
+
   return response.data.data;
 };
 
@@ -19,10 +21,14 @@ export const resendVerifyEmail = async () => {
 };
 
 export const logout = async () => {
-  await api.delete('/auth');
+  await api.delete('/auth', {
+    data: {
+      refreshToken: getRefreshToken(),
+    },
+  });
+
   clearTokens();
 };
-
 export const sendResetPassword = async (email) => {
   const res = await api.post('/auth/reset-password', { email });
   return res.data;

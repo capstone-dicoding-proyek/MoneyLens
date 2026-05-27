@@ -1,101 +1,119 @@
 import request from 'supertest';
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 
 const { app } = await import('../src/server.js');
 
 describe('Transactions Service - HTTP Endpoint Validation', () => {
-    describe('POST /api/transactions - Add Transactions', () => {
-        let accessToken;
-        beforeAll(async () => {
-            const loginResponse = await request(app)
-                .post('/api/auth')
-                .send({
-                    email: 'tes@gmail.com',
-                    password: '123456789'
-                });
-            accessToken =
-                loginResponse.body.data.accessToken;
+  // POST /api/transactions/upload — upload file belum ditest
 
-        });
+  describe('POST /api/transactions/expense', () => {
+    const expensePayload = {
+      items: [
+        {
+          name: 'rambutan',
+          unitPrice: 4000,
+          detailType: 'product',
+          quantity: 45,
+        },
+      ],
+      transactionDate: '2024-01-15',
+    };
 
-        it.only('should return 201 when create', async () => {
-            const transactionData = {
-                items: [
-                    {
-                        name: 'rambutan',
-                        unitPrice: 4000,
-                        quantity: 45
-                    }
-                ],
-                transactionDate: '2024-01-15'
-            };
+    it('should return 401 when authorization header is missing', async () => {
+      const response = await request(app)
+        .post('/api/transactions/expense')
+        .send(expensePayload);
 
-            const response = await request(app)
-                .set('Authorization', `Bearer ${accessToken}`)
-                .send(transactionData);
-            console.log(response);
-            
-            expect(response.statusCode).toBe(201);
-            expect(response.body.status).toBe('success');
-        });
-
-        it('should return 401 when authorization header is missing', async () => {
-            const transactionData = {
-                items: [
-                    {
-                        categoryId: '1',
-                        amount: 50000,
-                        description: 'Grocery shopping',
-                        type: 'expense'
-                    }
-                ],
-                transactionDate: '2024-01-15'
-            };
-
-            const response = await request(app)
-                .post('/api/transactions')
-                .send(transactionData);
-
-            expect(response.statusCode).toBe(401);
-            expect(response.body.status).toBe('fail');
-        });
-
-        it('should return 401 when authorization token is invalid', async () => {
-            const transactionData = {
-                items: [
-                    {
-                        categoryId: '1',
-                        amount: 50000,
-                        description: 'Grocery shopping',
-                        type: 'expense'
-                    }
-                ],
-                transactionDate: '2024-01-15'
-            };
-
-            const response = await request(app)
-                .post('/api/transactions')
-                .set('Authorization', 'Bearer invalid-token')
-                .send(transactionData);
-
-            expect(response.statusCode).toBe(401);
-        });
-
-        it('should return 401 when no bearer token provided', async () => {
-            const transactionData = {
-                items: [],
-                transactionDate: '2024-01-15'
-            };
-
-            const response = await request(app)
-                .post('/api/transactions')
-                .set('Authorization', 'InvalidFormat')
-                .send(transactionData);
-
-            expect(response.statusCode).toBe(401);
-        });
+      expect(response.statusCode).toBe(401);
+      expect(response.body.status).toBe('fail');
     });
 
+    it('should return 401 when authorization token is invalid', async () => {
+      const response = await request(app)
+        .post('/api/transactions/expense')
+        .set('Authorization', 'Bearer invalid-token')
+        .send(expensePayload);
 
+      expect(response.statusCode).toBe(401);
+    });
 
+    it('should return 401 when Authorization header format is wrong', async () => {
+      const response = await request(app)
+        .post('/api/transactions/expense')
+        .set('Authorization', 'InvalidFormat')
+        .send(expensePayload);
+
+      expect(response.statusCode).toBe(401);
+    });
+  });
+
+  describe('POST /api/transactions/income', () => {
+    const incomePayload = {
+      totalAmount: 5000000,
+      transactionDate: '2024-01-15',
+    };
+
+    it('should return 401 when authorization header is missing', async () => {
+      const response = await request(app)
+        .post('/api/transactions/income')
+        .send(incomePayload);
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body.status).toBe('fail');
+    });
+
+    it('should return 401 when authorization token is invalid', async () => {
+      const response = await request(app)
+        .post('/api/transactions/income')
+        .set('Authorization', 'Bearer invalid-token')
+        .send(incomePayload);
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should return 401 when Authorization header format is wrong', async () => {
+      const response = await request(app)
+        .post('/api/transactions/income')
+        .set('Authorization', 'InvalidFormat')
+        .send(incomePayload);
+
+      expect(response.statusCode).toBe(401);
+    });
+  });
+
+  describe('GET /api/transactions/dashboard', () => {
+    it('should return 401 when authorization header is missing', async () => {
+      const response = await request(app)
+        .get('/api/transactions/dashboard');
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body.status).toBe('fail');
+    });
+
+    it('should return 401 when authorization token is invalid', async () => {
+      const response = await request(app)
+        .get('/api/transactions/dashboard')
+        .set('Authorization', 'Bearer invalid-token');
+
+      expect(response.statusCode).toBe(401);
+    });
+  });
+
+  describe('GET /api/transactions/history', () => {
+    it('should return 401 when authorization header is missing', async () => {
+      const response = await request(app)
+        .get('/api/transactions/history');
+
+      expect(response.statusCode).toBe(401);
+      expect(response.body.status).toBe('fail');
+    });
+
+    it('should return 401 when authorization token is invalid', async () => {
+      const response = await request(app)
+        .get('/api/transactions/history')
+        .set('Authorization', 'Bearer invalid-token');
+
+      expect(response.statusCode).toBe(401);
+    });
+  });
 });

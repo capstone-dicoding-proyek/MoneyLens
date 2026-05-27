@@ -3,7 +3,7 @@ import { api } from './axios-instance';
 
 export const loginWithGoogle = async (credentialResponse) => {
   const res = await api.post('/users/google-login', {
-    token: credentialResponse.credential,
+    code: credentialResponse.code,
   });
   const { accessToken, refreshToken } = res.data.data;
   putTokens({ accessToken, refreshToken });
@@ -23,5 +23,11 @@ export const resetPassword = async ({ token, password }) => {
 
 export const getUserLogged = async () => {
   const res = await api.get('/users');
+  return res.data;
+};
+
+
+export const putUserName = async ({ fullname }) => {
+  const res = await api.put('/users', { fullname });
   return res.data;
 };
