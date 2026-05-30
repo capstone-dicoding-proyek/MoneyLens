@@ -3,3 +3,4 @@ venv
 tensorboard_logs
 new_dataset
 .env
+./src/__pycache__/
