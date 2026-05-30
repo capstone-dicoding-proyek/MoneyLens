@@ -96,7 +96,7 @@ export const uploadFileFoto = async (req, res, next) => {
         ? item.detailType
         : quantity
           ? 'product'
-          : 'service';
+          : 'other';
 
       return {
         ...item,

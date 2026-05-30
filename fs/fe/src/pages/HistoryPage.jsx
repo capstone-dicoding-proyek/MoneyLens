@@ -370,7 +370,7 @@ export default function HistoryPage() {
           />
           <SummaryCardComponent
             title="Saldo Periode Ini"
-            amount={Math.abs(summary.balance)}
+            amount={summary.balance}
             change={balanceChange}
             colorClass={
               summary.balance >= 0 ? 'text-green-600' : 'text-red-600'

@@ -25,7 +25,7 @@ export const getWarning = (income, expense) => {
   if (income === 0 && expense > 0)
     return { label: 'Tidak ada pemasukan!', level: 'danger' };
   const ratio = expense / income;
-  if (ratio >= 0.8) return { label: 'Boros! Hampir habis',     level: 'danger' };
-  if (ratio >= 0.5) return { label: 'Hati-hati, cukup tinggi', level: 'warn'   };
+  if (ratio >= 0.8) return { label: 'Pengeluaran sangat tinggi',     level: 'danger' };
+  if (ratio >= 0.5) return { label: 'Pengeluaran mulai meningkat', level: 'warn'   };
   return null;
 };
