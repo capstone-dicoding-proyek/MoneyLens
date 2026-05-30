@@ -1,0 +1,38 @@
+services:
+  inference:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: moneylens_inference
+
+    ports:
+      - "5001:5001"
+
+    volumes:
+      - ./src:/app/src
+      - ./api/app.py:/app/app.py
+      - ./saved_model:/app/saved_model
+      - hf_cache:/tmp/huggingface
+
+    env_file:
+      - ./.env
+
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEBUG=true
+      - HF_HOME=/tmp/huggingface
+      - TRANSFORMERS_CACHE=/tmp/huggingface
+      - MPLCONFIGDIR=/tmp/matplotlib
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+volumes:
+  hf_cache:

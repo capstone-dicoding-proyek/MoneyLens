@@ -2,4 +2,6 @@ Dataset_ocr
 venv
 tensorboard_logs
 new_dataset
-__pycache__
+.env
+./src/__pycache__
+*.pyc

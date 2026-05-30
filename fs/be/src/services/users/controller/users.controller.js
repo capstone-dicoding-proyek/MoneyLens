@@ -56,7 +56,8 @@ export const resetPassword = async (req, res, next) => {
 };
 
 export const loginWithGoogle = async (req, res, next) => {
-  console.log(process.env.GOOGLE_CLIENT_ID,
+  console.log(
+    process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
     process.env.URLFE
   );
