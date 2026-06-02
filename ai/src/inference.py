@@ -1,19 +1,3 @@
-"""
-inference.py
-============
-Modul inference untuk model OCR MoneyLens.
-Pipeline: YOLOv8 (deteksi field) → TrOCR (baca teks per crop)
-
-Label: Address, Date, Item, OrderId, Subtotal, Tax, Title, TotalPrice
-
-Cara pakai:
-    from inference import OCRInference
-
-    ocr = OCRInference(model_path="saved_model/best.pt")
-    result = ocr.run_inference("foto_struk.jpg")
-    print(result["extracted"])
-"""
-
 import os
 import time
 import logging
@@ -31,6 +15,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger("OCRInference")
 
+# ── Thread optimization (lakukan sekali saat import) ──────────────────────────
+import torch
+
+_CPU_CORES = os.cpu_count() or 4
+torch.set_num_threads(_CPU_CORES)
+torch.set_num_interop_threads(max(1, _CPU_CORES // 2))
+logger.info(f"PyTorch threads: intra={_CPU_CORES}, inter={max(1, _CPU_CORES // 2)}")
 
 # ── Konstanta ──────────────────────────────────────────────────────────────────
 LABEL_NAMES: List[str] = [
@@ -60,8 +51,12 @@ DEFAULT_IOU_THRESHOLD  = 0.45
 DEFAULT_IMG_SIZE       = 640
 TROCR_MODEL_NAME       = "microsoft/trocr-base-printed"
 
+# Resize gambar input jika lebih besar dari ini (pixels di sisi terpanjang)
+# Mengurangi beban YOLO + crop preprocessing tanpa banyak kehilangan akurasi
+MAX_INPUT_DIM = 1280
 
-# ── Helper: load gambar ────────────────────────────────────────────────────────
+
+# ── Helper: load & resize gambar ──────────────────────────────────────────────
 def _load_image(source: Union[str, Path, np.ndarray, Image.Image]) -> np.ndarray:
     """Terima berbagai tipe input, selalu return numpy array BGR uint8."""
     if isinstance(source, (str, Path)):
@@ -86,25 +81,43 @@ def _load_image(source: Union[str, Path, np.ndarray, Image.Image]) -> np.ndarray
     raise TypeError(f"Tipe gambar tidak didukung: {type(source)}")
 
 
-# ── Preprocessing crop (dari notebook) ────────────────────────────────────────
+def _maybe_resize(img_bgr: np.ndarray, max_dim: int = MAX_INPUT_DIM) -> np.ndarray:
+    """
+    Resize proporsional jika gambar terlalu besar.
+    Gambar resolusi tinggi (4K, 12MP, dll) sangat memperlambat YOLO & preprocessing.
+    """
+    h, w = img_bgr.shape[:2]
+    longest = max(h, w)
+    if longest <= max_dim:
+        return img_bgr
+    scale = max_dim / longest
+    new_w, new_h = int(w * scale), int(h * scale)
+    logger.info(f"Resize input: {w}x{h} → {new_w}x{new_h}")
+    return cv2.resize(img_bgr, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
+
+# ── Preprocessing crop (ringan, tanpa denoising) ──────────────────────────────
 def preprocess_crop(crop_bgr: np.ndarray) -> np.ndarray:
     """
     Preprocessing crop sebelum dikirim ke TrOCR.
-    Pipeline: grayscale → resize 2x → denoise → adaptive threshold → morphology
-    Mengembalikan gambar grayscale uint8.
+    OPTIMIZED: hapus fastNlMeansDenoising (penyebab utama kelambatan).
+
+    Pipeline: grayscale → resize 2x → CLAHE → adaptive threshold → morphology
+    CLAHE (Contrast Limited AHE) menggantikan denoising, jauh lebih cepat.
     """
     # 1. Grayscale
     gray = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2GRAY)
 
-    # 2. Resize 2x agar teks kecil lebih jelas
+    # 2. Resize 2x (tetap berguna untuk teks kecil)
     gray = cv2.resize(gray, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
 
-    # 3. Denoising
-    denoise = cv2.fastNlMeansDenoising(gray, None, 30, 7, 21)
+    # 3. CLAHE — tingkatkan kontras lokal (cepat, gantikan denoising)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray  = clahe.apply(gray)
 
     # 4. Adaptive threshold
     thresh = cv2.adaptiveThreshold(
-        denoise,
+        gray,
         255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY,
@@ -112,7 +125,7 @@ def preprocess_crop(crop_bgr: np.ndarray) -> np.ndarray:
         2,
     )
 
-    # 5. Morphology — teks lebih tebal & jelas
+    # 5. Morphology
     kernel = np.ones((2, 2), np.uint8)
     morph  = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
 
@@ -178,6 +191,7 @@ class OCRInference:
     device         : 'cpu' atau 'cuda'; None = auto-detect
     trocr_model    : nama model TrOCR HuggingFace
     crop_padding   : padding piksel di sekeliling bbox sebelum crop
+    trocr_batch    : jumlah crop yang diproses sekaligus oleh TrOCR
     """
 
     def __init__(
@@ -189,6 +203,7 @@ class OCRInference:
         device: Optional[str] = None,
         trocr_model: str      = TROCR_MODEL_NAME,
         crop_padding: int     = 4,
+        trocr_batch: int      = 8,   # BARU: batch size TrOCR
     ) -> None:
         try:
             from ultralytics import YOLO
@@ -200,12 +215,11 @@ class OCRInference:
         except ImportError:
             raise ImportError("Jalankan: pip install transformers")
 
-        import torch
-
         self.conf_threshold = conf_threshold
         self.iou_threshold  = iou_threshold
         self.img_size       = img_size
         self.crop_padding   = crop_padding
+        self.trocr_batch    = trocr_batch
 
         # ── Device ──────────────────────────────────────────────────────────
         if device is None:
@@ -234,40 +248,48 @@ class OCRInference:
         self.trocr_model     = VisionEncoderDecoderModel.from_pretrained(trocr_model).to(self.device)
         self.trocr_model.eval()
 
-        logger.info(f"Model siap | device={self.device} | conf={conf_threshold} | iou={iou_threshold}")
+        logger.info(f"Model siap | device={self.device} | conf={conf_threshold} | iou={iou_threshold} | batch={trocr_batch}")
 
-    # ── Baca teks dari crop ────────────────────────────────────────────────
-    def _extract_text(self, crop_bgr: np.ndarray) -> str:
+    # ── Baca teks dari BATCH crop ──────────────────────────────────────────
+    def _extract_texts_batch(self, crops_bgr: List[np.ndarray]) -> List[str]:
         """
-        Preprocessing crop → TrOCR → return teks string.
+        OPTIMIZED: proses semua crop sekaligus dalam satu forward pass TrOCR.
+        Jauh lebih efisien daripada panggil generate() N kali.
         """
-        import torch
+        if not crops_bgr:
+            return []
 
-        crop_processed = preprocess_crop(crop_bgr)
+        pil_images = []
+        for crop in crops_bgr:
+            processed = preprocess_crop(crop)
+            pil_images.append(Image.fromarray(processed).convert("RGB"))
 
-        # TrOCR butuh RGB PIL Image
-        pil_img = Image.fromarray(crop_processed).convert("RGB")
+        results: List[str] = []
 
-        pixel_values = self.trocr_processor(
-            images=pil_img,
-            return_tensors="pt",
-        ).pixel_values.to(self.device)
+        # Proses dalam sub-batch jika jumlah crop sangat banyak
+        for i in range(0, len(pil_images), self.trocr_batch):
+            batch = pil_images[i : i + self.trocr_batch]
 
-        with torch.no_grad():
-            generated_ids = self.trocr_model.generate(
-                pixel_values,
-                max_length=64,
-                num_beams=5,
-                early_stopping=True,
-                no_repeat_ngram_size=2,
+            pixel_values = self.trocr_processor(
+                images=batch,
+                return_tensors="pt",
+            ).pixel_values.to(self.device)
+
+            with torch.no_grad():
+                generated_ids = self.trocr_model.generate(
+                    pixel_values,
+                    max_new_tokens=32,   # OPTIMIZED: 64→32, cukup untuk teks struk
+                    num_beams=1,         # OPTIMIZED: greedy decode (5→1), ~4x lebih cepat
+                    do_sample=False,
+                )
+
+            decoded = self.trocr_processor.batch_decode(
+                generated_ids,
+                skip_special_tokens=True,
             )
+            results.extend([t.strip() for t in decoded])
 
-        text = self.trocr_processor.batch_decode(
-            generated_ids,
-            skip_special_tokens=True,
-        )[0]
-
-        return text.strip()
+        return results
 
     # ── Inference tunggal ─────────────────────────────────────────────────
     def run_inference(
@@ -288,6 +310,7 @@ class OCRInference:
             inference_time_ms : total waktu (ms)
         """
         img_bgr = _load_image(source)
+        img_bgr = _maybe_resize(img_bgr)          # BARU: resize jika terlalu besar
         h, w    = img_bgr.shape[:2]
 
         start_ns = time.perf_counter_ns()
@@ -305,19 +328,12 @@ class OCRInference:
         detections = _parse_detections(yolo_results, self.conf_threshold)
         grouped    = _group_by_label(detections)
 
-        # ── Step 2: TrOCR baca teks per deteksi ──────────────────────────
-        # Untuk label yang muncul lebih dari sekali (misal Item),
-        # semua crop dibaca dan dikumpulkan sebagai list
-        extracted: Dict[str, object] = {}
+        # ── Step 2: Kumpulkan semua crop, lalu batch TrOCR sekaligus ─────
+        # Urutan: (label, det_index, crop_bgr)
+        crop_queue: List[Tuple[str, int, np.ndarray]] = []
 
         for label in LABEL_NAMES:
-            dets = grouped.get(label, [])
-            if not dets:
-                extracted[label] = None
-                continue
-
-            texts = []
-            for det in dets:
+            for det in grouped.get(label, []):
                 x1 = max(0, det["bbox"]["x1"] - self.crop_padding)
                 y1 = max(0, det["bbox"]["y1"] - self.crop_padding)
                 x2 = min(w, det["bbox"]["x2"] + self.crop_padding)
@@ -326,18 +342,45 @@ class OCRInference:
                 crop = img_bgr[y1:y2, x1:x2]
                 if crop.size == 0:
                     continue
+                crop_queue.append((label, len(crop_queue), crop))
 
-                text = self._extract_text(crop)
-                texts.append({
-                    "text":       text,
+        # Batch inference TrOCR — semua crop dalam 1–2 forward pass
+        all_crops   = [c for _, _, c in crop_queue]
+        all_texts   = self._extract_texts_batch(all_crops)
+
+        # ── Step 3: Susun hasil ke struktur extracted ─────────────────────
+        # Map hasil teks kembali ke label & deteksi
+        text_by_idx = {idx: txt for (_, idx, _), txt in zip(crop_queue, all_texts)}
+
+        # Rebuild: iterasi ulang dengan counter yang sama
+        counter     = 0
+        label_texts: Dict[str, List[Dict]] = {label: [] for label in LABEL_NAMES}
+
+        for label in LABEL_NAMES:
+            for det in grouped.get(label, []):
+                x1 = max(0, det["bbox"]["x1"] - self.crop_padding)
+                y1 = max(0, det["bbox"]["y1"] - self.crop_padding)
+                x2 = min(w, det["bbox"]["x2"] + self.crop_padding)
+                y2 = min(h, det["bbox"]["y2"] + self.crop_padding)
+                crop = img_bgr[y1:y2, x1:x2]
+                if crop.size == 0:
+                    continue
+
+                txt = text_by_idx.get(counter, "")
+                label_texts[label].append({
+                    "text":       txt,
                     "confidence": round(det["confidence"], 4),
                     "bbox":       det["bbox"],
                 })
+                counter += 1
 
-            # Label yang umumnya muncul 1x → ambil teks langsung (string)
-            # Item bisa muncul banyak → tetap list
-            if label == "Item":
-                extracted[label] = texts
+        extracted: Dict[str, object] = {}
+        for label in LABEL_NAMES:
+            texts = label_texts[label]
+            if not texts:
+                extracted[label] = None
+            elif label == "Item":
+                extracted[label] = texts          # list
             else:
                 extracted[label] = texts[0]["text"] if texts else None
 
@@ -350,7 +393,7 @@ class OCRInference:
         return {
             "detections":        detections,
             "grouped":           grouped,
-            "extracted":         extracted,   # ← output utama
+            "extracted":         extracted,
             "image_shape":       (h, w),
             "inference_time_ms": round(elapsed_ms, 2),
         }
@@ -399,7 +442,6 @@ class OCRInference:
             color = LABEL_COLORS.get(label, (0, 255, 0))
             cv2.rectangle(vis, (x1, y1), (x2, y2), color, line_thickness)
 
-            # Ambil teks hasil TrOCR untuk ditampilkan
             ext = result["extracted"].get(label)
             if isinstance(ext, list):
                 display_text = f"{label} {conf:.2f}"
