@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 import os, sys, re
 from pathlib import Path
 from dotenv import load_dotenv
+import io
+from PIL import Image as PILImage
 
 load_dotenv()
 
@@ -99,18 +101,12 @@ def ocr_endpoint():
         return jsonify({"success": False, "message": "image required"}), 400
 
     # Simpan sementara
-    import tempfile
-    suffix = Path(image.filename).suffix or ".jpg"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        image.save(tmp.name)
-        tmp_path = tmp.name
-
     try:
-        result = ocr.run_inference(tmp_path)
+        img_bytes = image.read()
+        pil_img = PILImage.open(io.BytesIO(img_bytes)).convert("RGB")
+        result = ocr.run_inference(pil_img)
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
-    finally:
-        os.unlink(tmp_path)
 
     # Build fields (sama seperti inference_service sebelumnya)
     extracted = result["extracted"]
