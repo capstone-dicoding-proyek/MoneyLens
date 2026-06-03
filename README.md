@@ -379,6 +379,35 @@ Untuk instruksi lebih detail per komponen, lihat README di masing-masing folder:
 
 ---
 
+## 👥 Tim MoneyLens
+
+| ID Peserta     | Nama                                                  | Role                     | Status          |
+| -------------- | ----------------------------------------------------- | ------------------------ | --------------- |
+| CACC525D6Y0069 | [Muhammad Remia Hasan](https://github.com/remiahasan) | AI Engineer              | Aktif           |
+| CACC525D6Y0041 | [Ainur Reza](https://github.com/starvieree)           | AI Engineer              | Aktif           |
+| CDCC525D6Y0086 | [Rofi Nazar Amrikin](https://github.com/rofinn7)      | Data Scientist           | Aktif-Bersyarat |
+| CDCC525D6Y0200 | [Andrian Roby Maulana](https://github.com/Al-faatih)  | Data Scientist           | Aktif           |
+| CFCC525D6Y0236 | [Nofa Firdaus Ananta](https://github.com/NofaFirdaus) | Full-Stack Web Developer | Aktif           |
+| CFCC525D6Y0237 | [Muhammad Musyaffa](https://github.com/mmusy4ffa)     | Full-Stack Web Developer | Aktif           |
+
+<br>
+
+<p align="center">
+  Dibuat dengan sepenuh hati oleh <strong>Tim MoneyLens</strong><br>
+  🚀 Capstone Project Dicoding
+</p>
+
+<p align="center">
+  <a href="https://github.com/remiahasan">Muhammad Remia Hasan</a> •
+  <a href="https://github.com/starvieree">Ainur Reza</a> •
+  <a href="https://github.com/rofinn7">Rofi Nazar Amrikin</a> •
+  <a href="https://github.com/Al-faatih">Andrian Roby Maulana</a> •
+  <a href="https://github.com/NofaFirdaus">Nofa Firdaus Ananta</a> •
+  <a href="https://github.com/mmusy4ffa">Muhammad Musyaffa</a>
+</p>
+
+
+
 <p align="center">
   Dibuat dengan sepenuh hati oleh <strong>Tim MoneyLens</strong> — Capstone Project Dicoding
 </p>
