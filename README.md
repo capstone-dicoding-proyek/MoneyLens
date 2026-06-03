@@ -1,4 +1,4 @@
-# 💰 MoneyLens
+#  MoneyLens
 
 > **Aplikasi pencatatan keuangan pintar berbasis OCR** — cukup foto struk belanja, MoneyLens akan membaca dan mencatat pengeluaranmu secara otomatis.
 
@@ -6,7 +6,7 @@ MoneyLens menggabungkan **Computer Vision (YOLO + TrOCR)** untuk mendeteksi dan 
 
 ---
 
-## 📑 Daftar Isi
+##  Daftar Isi
 
 - [Arsitektur Proyek](#-arsitektur-proyek)
 - [Tech Stack](#-tech-stack)
@@ -23,7 +23,7 @@ MoneyLens menggabungkan **Computer Vision (YOLO + TrOCR)** untuk mendeteksi dan 
 
 ---
 
-## 🏗 Arsitektur Proyek
+##  Arsitektur Proyek
 
 ```
 ┌─────────────┐       ┌─────────────────┐       ┌──────────────────┐
@@ -42,7 +42,7 @@ MoneyLens menggabungkan **Computer Vision (YOLO + TrOCR)** untuk mendeteksi dan 
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Komponen | Teknologi |
 |---|---|
@@ -53,7 +53,7 @@ MoneyLens menggabungkan **Computer Vision (YOLO + TrOCR)** untuk mendeteksi dan 
 
 ---
 
-## 📋 Prasyarat
+##  Prasyarat
 
 Pastikan perangkat kamu sudah terinstal:
 
@@ -66,7 +66,7 @@ Pastikan perangkat kamu sudah terinstal:
 
 ---
 
-## 🚀 Cara Mereplikasi Proyek
+##  Cara Mereplikasi Proyek
 
 ### 1. Clone Repository
 
@@ -245,11 +245,11 @@ Frontend akan berjalan di `http://localhost:5173`.
 
 ---
 
-## 📁 Struktur Folder
+##  Struktur Folder
 
 ```
 MoneyLens/
-├── ai/                          # 🤖 AI / Machine Learning Service
+├── ai/                          # AI / Machine Learning Service
 │   ├── api/
 │   │   └── app.py               # Flask API server
 │   ├── notebooks/               # Jupyter notebooks (training & eksperimen)
@@ -271,8 +271,8 @@ MoneyLens/
 │   ├── requirements.txt
 │   └── .env.example
 │
-├── fs/                          # 🌐 Full Stack (Backend + Frontend)
-│   ├── be/                      # ⚙️ Backend API
+├── fs/                          #  Full Stack (Backend + Frontend)
+│   ├── be/                      #  Backend API
 │   │   ├── src/
 │   │   │   └── server.js        # Entry point
 │   │   ├── migrations/          # Database migrations
@@ -282,7 +282,7 @@ MoneyLens/
 │   │   ├── package.json
 │   │   └── .env.example
 │   │
-│   └── fe/                      # 🎨 Frontend Web
+│   └── fe/                      #  Frontend Web
 │       ├── src/
 │       │   ├── App.jsx          # Root component
 │       │   ├── main.jsx         # Entry point
@@ -299,14 +299,14 @@ MoneyLens/
 │       ├── package.json
 │       └── .env.example
 │
-├── ds/                          # 📊 Data Science (eksplorasi & analisis)
+├── ds/                          #  Data Science (eksplorasi & analisis)
 │
-└── README.md                    # 📄 Dokumentasi ini
+└── README.md                    #  Dokumentasi ini
 ```
 
 ---
 
-## 🔐 Environment Variables
+##  Environment Variables
 
 ### AI Service (`ai/.env`)
 
@@ -342,7 +342,7 @@ MoneyLens/
 
 ---
 
-## 🔄 Alur Kerja Tim
+##  Alur Kerja Tim
 
 Gunakan **branching workflow** untuk setiap fitur atau perbaikan:
 
@@ -363,23 +363,23 @@ git commit -m "feat: deskripsi perubahan"
 git push origin <nama-fitur>
 ```
 
-> ⚠️ **Selalu pull dari `main` sebelum membuat branch baru** agar menghindari conflict.
+>  **Selalu pull dari `main` sebelum membuat branch baru** agar menghindari conflict.
 
 ---
 
-## 📄 README Masing-Masing Komponen
+##  README Masing-Masing Komponen
 
 Untuk instruksi lebih detail per komponen, lihat README di masing-masing folder:
 
 | Komponen | README |
 |----------|--------|
-| 🤖 AI / ML | [ai/README.md](https://github.com/capstone-dicoding-proyek/MoneyLens/blob/main/ai/README.md) |
-| 🌐 Full Stack | [fs/README.md](https://github.com/capstone-dicoding-proyek/MoneyLens/blob/main/fs/README.md) |
-| 📊 Data Science | [ds/README.md](https://github.com/capstone-dicoding-proyek/MoneyLens/blob/main/ds/README.md) |
+|  AI / ML | [ai/README.md](https://github.com/capstone-dicoding-proyek/MoneyLens/blob/main/ai/README.md) |
+|  Full Stack | [fs/README.md](https://github.com/capstone-dicoding-proyek/MoneyLens/blob/main/fs/README.md) |
+|  Data Science | [ds/README.md](https://github.com/capstone-dicoding-proyek/MoneyLens/blob/main/ds/README.md) |
 
 ---
 
-## 👥 Tim MoneyLens
+##  Tim MoneyLens
 
 | ID Peserta     | Nama                                                  | Role                     | Status          |
 | -------------- | ----------------------------------------------------- | ------------------------ | --------------- |
@@ -394,7 +394,7 @@ Untuk instruksi lebih detail per komponen, lihat README di masing-masing folder:
 
 <p align="center">
   Dibuat dengan sepenuh hati oleh <strong>Tim MoneyLens</strong><br>
-  🚀 Capstone Project Dicoding
+   Capstone Project Dicoding
 </p>
 
 <p align="center">
