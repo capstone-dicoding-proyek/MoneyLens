@@ -1,14 +1,11 @@
 /* eslint-disable camelcase */
 
-import { Resend } from 'resend';
+// import { Resend } from 'resend';
 
-// import nodemailer from 'nodemailer';
+import nodemailer from 'nodemailer';
 
 class MailSender {
-  constructor() {
-    this._resend = new Resend(process.env.RESEND_API_KEY);
-  }
-  /*smtp
+
   constructor() {
     this._transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -19,7 +16,7 @@ class MailSender {
       },
     });
   }
-  */
+
   sendEmail({ targetEmail, token, url, subject, type = 'default' }) {
     const verifyUrl = token
       ? `${process.env.URLFE}${url}?token=${token}`
@@ -67,8 +64,8 @@ class MailSender {
 
     const tmpl = templates[type] ?? templates.default;
 
-    return this._resend.emails.send({
-      from: 'no-reply@hello.com',
+    return this._transporter.sendMail({
+      from: 'moneylens@catetin.icu',
       to: targetEmail,
       subject,
       text: token
