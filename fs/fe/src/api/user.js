@@ -5,15 +5,15 @@ export const loginWithGoogle = async (credentialResponse) => {
   const res = await api.post('/users/google-login', {
     code: credentialResponse.code,
   });
-  const { accessToken, refreshToken } = res.data.data;
-  putTokens({ accessToken, refreshToken });
+  const { accessToken } = res.data.data;
+  putTokens({ accessToken });
   return res.data.data;
 };
 
 export const register = async ({ fullname, email, password }) => {
   const response = await api.post('/users', { fullname, email, password });
-  const { accessToken, refreshToken } = response.data.data;
-  putTokens({ accessToken, refreshToken });
+  const { accessToken } = response.data.data;
+  putTokens({ accessToken });
 };
 
 export const resetPassword = async ({ token, password }) => {

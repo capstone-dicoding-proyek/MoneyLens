@@ -1,11 +1,12 @@
 /* eslint-disable no-unused-vars */
 import axios from 'axios';
-import { clearTokens, getAccessToken, getRefreshToken } from '../utils/local-storage';
+import { clearTokens, getAccessToken } from '../utils/local-storage';
 
 
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_URL_API,
+  withCredentials: true,
 });
 
 
@@ -24,13 +25,11 @@ api.interceptors.response.use(
     const isLoginRequest =
       originalRequest.url === '/auth' && originalRequest.method === 'post';
 
-    if (error.response?.status === 401 && !originalRequest._retry &&  !isLoginRequest) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest) {
       originalRequest._retry = true;
 
       try {
-        const response = await axios.put(`${import.meta.env.VITE_URL_API}/auth`, {
-          refreshToken: getRefreshToken(),
-        });
+        const response = await axios.put(`${import.meta.env.VITE_URL_API}/auth`, {});
 
         const { accessToken } = response.data.data;
 

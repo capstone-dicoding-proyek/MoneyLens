@@ -54,9 +54,14 @@ export const login = async (req, res, next) => {
   const accessToken = TokenManager.generateAccessToken({ id: result.id });
   const refreshToken = TokenManager.generateRefreshToken({ id: result.id });
   await authenticationsRepository.addRefreshToken({ userID: result.id, token: refreshToken });
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
   return response(res, 200, 'Login berhasil', {
     accessToken,
-    refreshToken,
   });
 };
 
@@ -74,10 +79,14 @@ export const addRefreshToken = async (req, res, next) => {
 
 // eslint-disable-next-line no-unused-vars
 export const logout = async (req, res, next) => {
-  const { refreshToken } = req.validated;
+  const refreshToken = req.cookies.refreshToken;
 
   await authenticationsRepository.deleteRefreshToken(refreshToken);
-
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
   return response(res, 200, 'Refresh token berhasil dihapus');
 };
 

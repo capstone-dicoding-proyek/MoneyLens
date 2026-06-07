@@ -24,11 +24,15 @@ export const registerUser = async (req, res, next) => {
   const accessToken = TokenManager.generateAccessToken({ id: result.id });
   const refreshToken = TokenManager.generateRefreshToken({ id: result.id });
   await authenticationsRepository.addRefreshToken({ userID: result.id, token: refreshToken });
-
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
   return response(res, 201, 'User berhasil dibuat, silahkan verifikasi email', {
     userId: result.id,
     accessToken,
-    refreshToken,
   });
 };
 
@@ -56,13 +60,6 @@ export const resetPassword = async (req, res, next) => {
 };
 
 export const loginWithGoogle = async (req, res, next) => {
-  console.log(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.URLFE
-  );
-
-  console.log(req.body);
   const { code } = req.body;
   const { tokens } = await client.getToken(code);
   const idToken = tokens.id_token;
@@ -104,9 +101,14 @@ export const loginWithGoogle = async (req, res, next) => {
   const accessToken = TokenManager.generateAccessToken({ id: user.id });
   const refreshToken = TokenManager.generateRefreshToken({ id: user.id });
   await authenticationsRepository.addRefreshToken({ userID: user.id, token: refreshToken });
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
   return response(res, 200, 'Login dengan Google berhasil', {
     accessToken,
-    refreshToken,
   });
 };
 
