@@ -32,7 +32,7 @@ export default function CategoryDetailItemComponent({ item }) {
       <div className="bg-secondary items-center flex justify-center w-10 h-10 rounded-lg">
         {item.icon}
       </div>
-      <div className="text-sm font-medium leading-tight">{item.detailType}</div>
+      <div className="text-sm font-medium leading-tight">{item.name}</div>
       <div className="font-bold text-lg">{formatRupiah(item.total)}</div>
       <div className="text-xs text-tthird">
         Sebesar <span className="text-primary font-bold">{item.percent}%</span>{' '}
