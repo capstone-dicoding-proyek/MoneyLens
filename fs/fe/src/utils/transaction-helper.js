@@ -29,3 +29,4 @@ export const getWarning = (income, expense) => {
   if (ratio >= 0.5) return { label: 'Pengeluaran mulai meningkat', level: 'warn'   };
   return null;
 };
+export const PERIODS = ['Mingguan', 'Bulanan', 'Tahunan', 'Custom'];

@@ -60,37 +60,28 @@ export const groupByDate = (items) => {
 };
 
 
-
-
 export function getDateRange(period, { month, year, weekMonday } = {}) {
-  const pad = (d) => d.toISOString().split('T')[0];
   const today = new Date();
 
   if (period === 'week') {
     const monday = weekMonday ?? getMondayOf(today);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    return { startDate: pad(monday), endDate: pad(sunday) };
+    return { startDate: toParam(monday), endDate: toParam(sunday) };
   }
 
   if (period === 'month') {
     const m = month ?? today.getMonth();
     const y = year ?? today.getFullYear();
-    const start = new Date(y, m, 1);
-    const end = new Date(y, m + 1, 0);
-    return { startDate: pad(start), endDate: pad(end) };
+    return { startDate: toParam(new Date(y, m, 1)), endDate: toParam(new Date(y, m + 1, 0)) };
   }
 
   if (period === 'year') {
     const y = year ?? today.getFullYear();
-    return {
-      startDate: `${y}-01-01`,
-      endDate: `${y}-12-31`,
-    };
+    return { startDate: `${y}-01-01`, endDate: `${y}-12-31` };
   }
 
   return {};
 }
-
 export const pad = (d) => d.toISOString().split('T')[0];
 

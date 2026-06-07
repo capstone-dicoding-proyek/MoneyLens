@@ -34,7 +34,7 @@ export default function CustomDatePickerComponent({
         Terapkan
       </button>
       {customStart && customEnd ? (
-        <div className="flex  gap-3 *:text-tthird *:text-sm">
+        <div className="flex items-center gap-1.5 text-xs text-tthird">
           <p>{formatDate(customStart)}</p>
           <span> - </span>
           <p>{formatDate(customEnd)}</p>

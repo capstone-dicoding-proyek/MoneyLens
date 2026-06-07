@@ -54,13 +54,12 @@ export const addTransactionsIncome = async (req, res, next) => {
 export const getDashboard = async (req, res, next) => {
   const { id } = req.user;
   const { startDate, endDate } = req.query;
-
-
+  const endOfDay = endDate ? `${endDate} 23:59:59` : undefined;
   const [chart, summary, category, history] = await Promise.all([
-    transactionsRepository.getChart({ userID: id, startDate, endDate }),
-    transactionsRepository.getDashboardSummary({ userID: id, startDate, endDate }),
-    transactionsRepository.getCategoryBreakdown({ userID: id, startDate, endDate }),
-    transactionsRepository.getHistory({ userID: id, startDate, endDate, page: 1, limit: 10 }),
+    transactionsRepository.getChart({ userID: id, startDate, endDate: endOfDay }),
+    transactionsRepository.getDashboardSummary({ userID: id, startDate, endDate: endOfDay }),
+    transactionsRepository.getCategoryBreakdown({ userID: id, startDate, endDate: endOfDay }),
+    transactionsRepository.getHistory({ userID: id, startDate, endDate: endOfDay, page: 1, limit: 10 }),
   ]);
 
   return response(res, 200, 'dashboard success', { chart, summary, category, history });

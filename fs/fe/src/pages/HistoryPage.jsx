@@ -47,11 +47,6 @@ const MONTHS = [
   'Desember',
 ];
 
-const PERIOD_RANGE_MAP = {
-  Mingguan: 'week',
-  Bulanan: 'month',
-  Tahunan: 'year',
-};
 
 export default function HistoryPage() {
   const [isOpen, setIsOpen] = useState({

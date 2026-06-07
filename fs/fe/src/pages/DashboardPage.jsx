@@ -38,6 +38,7 @@ import LineChartComponent from '../components/LineChartComponent';
 import ModalTypeComponent from '../components/ModalTypeComponent';
 import TransactionDetailModal from '../components/TransactionItemModal';
 import { getDateRange } from '../utils/date-helper';
+import { formatDate } from '../utils/format-time';
 
 const PERIOD_RANGE_MAP = {
   Mingguan: 'week',
@@ -78,7 +79,6 @@ export default function DashboardPage() {
     if (activePeriod === 'custom') return;
 
     const { startDate, endDate } = getDateRange(activePeriod);
-
     const params =
       startDate && endDate ? `?startDate=${startDate}&endDate=${endDate}` : '';
 
@@ -200,7 +200,7 @@ export default function DashboardPage() {
             </button>
           ))}
 
-          {activePeriod === null && (
+          {activePeriod === 'custom' && (
             <CustomDatePickerComponent
               customEnd={customEnd}
               customStart={customStart}
@@ -208,6 +208,13 @@ export default function DashboardPage() {
               setCustomEnd={setCustomEnd}
               setCustomStart={setCustomStart}
             />
+          )}
+          {activePeriod !== 'custom' && (
+            <div className="flex items-center gap-1.5 text-xs text-tthird">
+              <span>{formatDate(getDateRange(activePeriod).startDate)}</span>
+              <span>–</span>
+              <span>{formatDate(getDateRange(activePeriod).endDate)}</span>
+            </div>
           )}
         </div>
 
