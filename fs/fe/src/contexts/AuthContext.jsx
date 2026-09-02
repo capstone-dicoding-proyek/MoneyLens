@@ -1,11 +1,13 @@
 // AuthContext.jsx
 import { createContext, useEffect, useState } from 'react';
 import { login, logout as logoutApi } from '../api/auth';
-import { loginWithGoogle, register } from '../api/user';
-import { getUserLogged } from '../api/user';
+import { getUserLogged, loginWithGoogle, register } from '../api/user';
 import { useToast } from '../hooks/useToast';
-import { useNavigate } from 'react-router-dom';
 import { getAccessToken } from '../utils/local-storage';
+import { router } from '../routes/router';
+import { queryClient } from '../lib/queryClient';
+import { QUERY_KEYS } from '../api/query-keys';
+import { getErrorMessage } from '../utils/get-error-message';
 
 const AuthContext = createContext();
 
@@ -13,7 +15,23 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const { addToast, removeToast } = useToast();
-  const navigate = useNavigate();
+
+  async function refreshUser() {
+    const token = getAccessToken();
+    if (!token) {
+      setUser(null);
+      return null;
+    }
+    try {
+      const data = await getUserLogged();
+      setUser(data.data.data);
+      return data.data.data;
+    } catch {
+      setUser(null);
+      return null;
+    }
+  }
+
   useEffect(() => {
     async function initAuth() {
       const token = getAccessToken();
@@ -39,14 +57,17 @@ export function AuthProvider({ children }) {
       await login({ email, password });
       const userData = await getUserLogged();
       setUser(userData.data.data);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['history'] });
       removeToast(loadingId);
       addToast('Login berhasil!', { type: 'success' });
-      navigate('/');
+      router.navigate({ to: '/' });
     } catch (err) {
       removeToast(loadingId);
       addToast(
-        err?.response?.data?.message || err?.message || 'Terjadi kesalahan',
-        { type: 'error' }
+        getErrorMessage(err, 'Gagal masuk. Periksa kembali email dan kata sandi Anda.'),
+        { type: 'error' },
       );
     }
   }
@@ -57,13 +78,17 @@ export function AuthProvider({ children }) {
       await loginWithGoogle(credentialResponse);
       const userData = await getUserLogged();
       setUser(userData.data.data);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['history'] });
       removeToast(loadingId);
       addToast('Login berhasil!', { type: 'success' });
+      router.navigate({ to: '/' });
     } catch (err) {
       removeToast(loadingId);
       addToast(
-        err?.response?.data?.message || err?.message || 'Terjadi kesalahan',
-        { type: 'error' }
+        getErrorMessage(err, 'Login dengan Google gagal. Silakan coba lagi.'),
+        { type: 'error' },
       );
     }
   }
@@ -74,15 +99,16 @@ export function AuthProvider({ children }) {
       await register({ fullname, email, password });
       const userData = await getUserLogged();
       setUser(userData.data.data);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user });
 
       removeToast(loadingId);
       addToast('Registrasi berhasil! Silakan cek email.', { type: 'success' });
-      navigate('/auth/resend-verifikasi-email');
+      router.navigate({ to: '/auth/resend-verifikasi-email' });
     } catch (err) {
       removeToast(loadingId);
       addToast(
-        err?.response?.data?.message || err?.message || 'Terjadi kesalahan',
-        { type: 'error' }
+        getErrorMessage(err, 'Pendaftaran akun gagal. Silakan coba beberapa saat lagi.'),
+        { type: 'error' },
       );
     }
   }
@@ -91,12 +117,25 @@ export function AuthProvider({ children }) {
     try {
       await logoutApi();
     } finally {
+      queryClient.clear();
       setUser(null);
+      router.navigate({ to: '/login' });
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, handleLogin, handleLoginWithGoogle, handleRegister, handleLogout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        refreshUser,
+        loading,
+        handleLogin,
+        handleLoginWithGoogle,
+        handleRegister,
+        handleLogout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -66,7 +66,10 @@ export const login = async (req, res, next) => {
 };
 
 export const addRefreshToken = async (req, res, next) => {
-  const { refreshToken } = req.validated;
+  const refreshToken = req.cookies?.refreshToken || req.validated?.refreshToken || req.body?.refreshToken;
+  if (!refreshToken) {
+    return next(new InvariantError('Refresh token tidak ditemukan'));
+  }
   const result = await authenticationsRepository.verifyRefreshToken(refreshToken);
   if (!result) {
     return next(new InvariantError('Refresh token tidak valid'));
@@ -77,9 +80,12 @@ export const addRefreshToken = async (req, res, next) => {
   return response(res, 200, 'Access Token berhasil diperbarui', { accessToken });
 };
 
-// eslint-disable-next-line no-unused-vars
 export const logout = async (req, res, next) => {
-  const refreshToken = req.cookies.refreshToken;
+  const refreshToken = req.cookies?.refreshToken || req.validated?.refreshToken || req.body?.refreshToken;
+
+  if (!refreshToken) {
+    return next(new InvariantError('Refresh token wajib diisi'));
+  }
 
   await authenticationsRepository.deleteRefreshToken(refreshToken);
   res.clearCookie('refreshToken', {

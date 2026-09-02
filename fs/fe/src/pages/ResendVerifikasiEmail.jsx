@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { useToast } from '../hooks/useToast';
 import { resendVerifyEmail } from '../api/auth';
 import useAuth from '../hooks/useAuth';
@@ -10,11 +10,12 @@ import GreenRectangle from '../components/LoginPageComponent';
 import LayoutAuthComponent from '../components/LayoutAuthComponent';
 import FormAuthComponent from '../components/FormAuthComponent';
 import ButtonComponent from '../components/ButtonComponent';
+import { IoMailUnreadOutline } from 'react-icons/io5';
+
+import { getErrorMessage } from '../utils/get-error-message';
 
 const RESEND_KEY = 'resend_email_end_time';
 const RESEND_COOLDOWN = 180;
-
-
 
 export default function ResendVerifikasiEmailPage() {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export default function ResendVerifikasiEmailPage() {
   };
 
   useEffect(() => {
-    if (user?.verified_email) navigate('/', { replace: true });
+    if (user?.verified_email) navigate({ to: '/', replace: true });
   }, [user, navigate]);
 
   useEffect(() => {
@@ -57,12 +58,12 @@ export default function ResendVerifikasiEmailPage() {
     setIsResending(true);
     try {
       await resendVerifyEmail();
-      addToast('Email verifikasi telah dikirim', { type: 'success' });
+      addToast('Email verifikasi telah dikirim!', { type: 'success' });
       startCooldown({ key: RESEND_KEY, duration: RESEND_COOLDOWN, setState: setCount });
       startTimer();
     } catch (err) {
       addToast(
-        err?.response?.data?.message || 'Gagal mengirim ulang email',
+        getErrorMessage(err, 'Gagal mengirim ulang email verifikasi.'),
         { type: 'error' }
       );
     } finally {
@@ -73,23 +74,36 @@ export default function ResendVerifikasiEmailPage() {
   return (
     <GreenRectangle>
       <LayoutAuthComponent>
-        <FormAuthComponent >
-          <h2 className='font-bold text-primary text-5xl mt-14 max-sm:text-4xl'>Verifikasi Email</h2>
-          <p className='text-tthird font-light text-sm mt-8'>
-            Kami telah mengirim link verifikasi ke email kamu.
-            Cek inbox atau folder spam.
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-100 text-[#1A7A5E] flex items-center justify-center text-3xl mx-auto shadow-sm">
+            <IoMailUnreadOutline />
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Verifikasi Email Anda
+          </h1>
+
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
+            Kami telah mengirim tautan verifikasi ke email Anda. Silakan periksa kotak masuk atau folder spam.
           </p>
+        </div>
+
+        <FormAuthComponent>
           <ButtonComponent
             onClick={handleResend}
-            title={isResending
-              ? 'Mengirim...'
-              : count > 0
-                ? `Kirim ulang dalam ${formatTime(count)}`
-                : 'Kirim'}
+            isLoading={isResending}
+            title={
+              isResending
+                ? 'Mengirim...'
+                : count > 0
+                  ? `Kirim ulang (${formatTime(count)})`
+                  : 'Kirim Ulang Email Verifikasi'
+            }
             disabled={count > 0 || isResending}
+            className="w-full py-3"
           />
-        </FormAuthComponent >
-      </LayoutAuthComponent >
+        </FormAuthComponent>
+      </LayoutAuthComponent>
     </GreenRectangle>
   );
 }

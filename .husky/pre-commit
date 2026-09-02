@@ -1,0 +1,3 @@
+npm --prefix fs/be run lint
+npm --prefix fs/fe run lint
+npm --prefix fs/be test

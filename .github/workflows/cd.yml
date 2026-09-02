@@ -1,0 +1,53 @@
+name: CD - MoneyLens Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate-and-build:
+    name: Build & Package Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            fs/be/package-lock.json
+            fs/fe/package-lock.json
+
+      - name: Install & Validate Backend
+        working-directory: fs/be
+        run: |
+          npm ci
+          npm run lint
+          npm test
+
+      - name: Build Frontend Production Bundle
+        working-directory: fs/fe
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+
+      - name: Archive Production Frontend Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: fs/fe/dist/
+          retention-days: 14
+
+  deploy:
+    name: Production Deployment
+    needs: validate-and-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment Step
+        run: |
+          echo "Release successfully validated and packaged for continuous deployment."

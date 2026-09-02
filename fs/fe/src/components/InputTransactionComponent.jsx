@@ -8,9 +8,10 @@ import { FaSpinner } from 'react-icons/fa';
 import OcrSectionComponent from './OcrSectionComponent';
 import { calcGrandTotal, HAS_QUANTITY } from '../utils/transaction-helper';
 import ItemRowTransactionComponent from './ItemRowTransactionComponent';
-import { createTransaction } from '../api/transaction';
 import ModalLayoutInputAndProfil from './ModalLayoutInputAndProfil';
 import { useToast } from '../hooks/useToast';
+import { useCreateTransactionMutation } from '../hooks/useTransactionsQuery';
+import { getErrorMessage } from '../utils/get-error-message';
 
 const emptyItem = () => ({
   id: crypto.randomUUID(),
@@ -24,9 +25,10 @@ const todayParam = () => new Date().toISOString().split('T')[0];
 
 export default function InputTransactionComponent({ onClose, fetchData }) {
   const [type, setType] = useState('expense');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { addToast } = useToast();
+  const createMutation = useCreateTransactionMutation();
+  const loading = createMutation.isPending;
 
   const [income, setIncome] = useState({
     totalAmount: '',
@@ -109,7 +111,6 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
       if (invalid) return setError('Nama dan harga setiap item harus diisi');
     }
 
-    setLoading(true);
     try {
       const body =
         type === 'income'
@@ -133,75 +134,73 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
             })),
           };
 
-      await createTransaction({ body, type });
+      await createMutation.mutateAsync({ body, type });
       addToast('Transaksi berhasil dibuat!', { type: 'success' });
       onClose();
-      fetchData();
+      fetchData?.();
     } catch (err) {
-      setError(err?.response?.data?.message ?? 'Gagal menyimpan transaksi');
-    } finally {
-      setLoading(false);
+      setError(getErrorMessage(err, 'Gagal menyimpan transaksi. Silakan periksa kembali data input.'));
     }
   };
 
   return (
     <ModalLayoutInputAndProfil title="Catat Transaksi" onClose={onClose}>
       {/* Type toggle */}
-      <div className="px-5 pb-3 flex-shrink-0">
-        <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+      <div className="px-6 pt-2 pb-3 flex-shrink-0">
+        <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
           <button
             type="button"
             onClick={() => setType('expense')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               type === 'expense'
-                ? 'bg-white text-red-500 shadow-sm'
-                : 'text-tthird hover:text-black'
+                ? 'bg-white text-rose-600 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <IoReceiptOutline />
+            <IoReceiptOutline className="text-base" />
             Pengeluaran
           </button>
           <button
             type="button"
             onClick={() => setType('income')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               type === 'income'
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-tthird hover:text-black'
+                ? 'bg-white text-emerald-700 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            <IoWalletOutline />
+            <IoWalletOutline className="text-base" />
             Pemasukan
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 pb-2 space-y-3 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-4 custom-scrollbar">
         {type === 'expense' && (
           <OcrSectionComponent type={type} onOcrResult={handleOcrResult} />
         )}
 
         {/* Income form */}
         {type === 'income' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-tthird mb-1 block">
-                Nama Pemasukan <span className="text-xs font-normal">(opsional)</span>
+              <label className="input-label">
+                Nama Pemasukan <span className="font-normal text-slate-400 lowercase">(opsional)</span>
               </label>
               <input
                 type="text"
-                placeholder="Gaji, freelance, dll..."
+                placeholder="Gaji, freelance, investasi..."
                 value={income.nameIncome}
                 onChange={(e) => setIncome({ ...income, nameIncome: e.target.value })}
-                className="w-full border border-line rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
+                className="input-field"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-tthird mb-1 block">
-                Nominal <span className="text-red-400">*</span>
+              <label className="input-label">
+                Nominal <span className="text-rose-500">*</span>
               </label>
-              <div className="flex items-center border border-line rounded-xl overflow-hidden focus-within:border-primary">
-                <span className="px-3 py-2.5 text-sm text-tthird bg-gray-50 border-r border-line">
+              <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden focus-within:border-[#2FA084] focus-within:ring-3 focus-within:ring-emerald-500/15 bg-white transition-all">
+                <span className="px-3.5 py-2.5 text-xs font-bold text-slate-500 bg-slate-50 border-r border-slate-200 select-none">
                   Rp
                 </span>
                 <input
@@ -210,29 +209,29 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
                   placeholder="0"
                   value={income.totalAmount}
                   onChange={(e) => setIncome({ ...income, totalAmount: e.target.value })}
-                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
+                  className="flex-1 px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold text-tthird mb-1 block">
-                Tanggal <span className="text-red-400">*</span>
+              <label className="input-label">
+                Tanggal <span className="text-rose-500">*</span>
               </label>
               <input
                 type="date"
                 value={income.transactionDate}
                 onChange={(e) => setIncome({ ...income, transactionDate: e.target.value })}
-                className="w-full border border-line rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
+                className="input-field"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-tthird mb-1 block">Catatan</label>
+              <label className="input-label">Catatan</label>
               <textarea
                 placeholder="Keterangan tambahan..."
                 value={income.description}
                 onChange={(e) => setIncome({ ...income, description: e.target.value })}
                 rows={2}
-                className="w-full border border-line rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary resize-none"
+                className="input-field resize-none"
               />
             </div>
           </div>
@@ -240,11 +239,11 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
 
         {/* Expense form */}
         {type === 'expense' && (
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="text-xs font-semibold text-tthird mb-1 block">
-                  Tanggal <span className="text-red-400">*</span>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="input-label">
+                  Tanggal <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -252,11 +251,11 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
                   onChange={(e) =>
                     setExpense({ ...expense, transactionDate: e.target.value })
                   }
-                  className="w-full border border-line rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
+                  className="input-field"
                 />
               </div>
-              <div className="flex-1">
-                <label className="text-xs font-semibold text-tthird mb-1 block">Catatan</label>
+              <div>
+                <label className="input-label">Catatan</label>
                 <input
                   type="text"
                   placeholder="Opsional..."
@@ -264,21 +263,21 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
                   onChange={(e) =>
                     setExpense({ ...expense, description: e.target.value })
                   }
-                  className="w-full border border-line rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
+                  className="input-field"
                 />
               </div>
             </div>
 
             {/* Items */}
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-tthird">
-                  Item ({items.length})
+                <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  Daftar Item ({items.length})
                 </span>
                 <button
                   type="button"
                   onClick={addItem}
-                  className="flex items-center gap-1 text-xs text-primary hover:text-secondary transition font-medium"
+                  className="inline-flex items-center gap-1 text-xs text-[#1A7A5E] hover:text-[#2FA084] font-bold cursor-pointer"
                 >
                   <IoAdd className="text-base" /> Tambah Item
                 </button>
@@ -295,36 +294,39 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
             </div>
 
             {/* Diskon */}
-            <div>
-              <label className="text-xs font-semibold text-tthird mb-1 block">
-                Diskon <span className="text-xs font-normal">(opsional)</span>
-              </label>
-              <div className="flex bg-gray-100 rounded-xl p-1 gap-1 mb-2">
-                <button
-                  type="button"
-                  onClick={() => setDiscount({ type: 'rupiah', value: '' })}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition ${
-                    discount.type === 'rupiah'
-                      ? 'bg-white text-red-500 shadow-sm'
-                      : 'text-tthird hover:text-black'
-                  }`}
-                >
-                  Rupiah (Rp)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDiscount({ type: 'persen', value: '' })}
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition ${
-                    discount.type === 'persen'
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-tthird hover:text-black'
-                  }`}
-                >
-                  Persen (%)
-                </button>
+            <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  Diskon / Potongan
+                </label>
+                <div className="flex bg-slate-200/70 rounded-lg p-0.5 gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setDiscount({ type: 'rupiah', value: '' })}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                      discount.type === 'rupiah'
+                        ? 'bg-white text-slate-800 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Nominal (Rp)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDiscount({ type: 'persen', value: '' })}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                      discount.type === 'persen'
+                        ? 'bg-white text-slate-800 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Persen (%)
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center border border-line rounded-xl overflow-hidden focus-within:border-primary">
-                <span className="px-3 py-2.5 text-sm text-tthird bg-gray-50 border-r border-line">
+
+              <div className="flex items-center border border-slate-200 rounded-xl overflow-hidden focus-within:border-[#2FA084] focus-within:ring-2 focus-within:ring-emerald-500/15 bg-white">
+                <span className="px-3 py-2 text-xs font-bold text-slate-400 bg-slate-50 border-r border-slate-200 select-none">
                   {discount.type === 'rupiah' ? 'Rp' : '%'}
                 </span>
                 <input
@@ -334,11 +336,10 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
                   placeholder="0"
                   value={discount.value}
                   onChange={(e) => handleDiscountChange(e.target.value)}
-                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
+                  className="flex-1 px-3 py-2 text-sm focus:outline-none"
                 />
-                {/* Preview konversi kalau persen */}
                 {discount.type === 'persen' && discountAmount > 0 && (
-                  <span className="px-3 text-xs text-tthird whitespace-nowrap">
+                  <span className="px-3 text-xs font-semibold text-emerald-600 whitespace-nowrap">
                     = Rp {discountAmount.toLocaleString('id-ID')}
                   </span>
                 )}
@@ -348,54 +349,44 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
         )}
       </div>
 
-      {/* Submit */}
-      <div className="flex-shrink-0 border-t border-line px-5 py-4 space-y-3">
+      {/* Submit Sticky Footer */}
+      <div className="modal-footer flex-col sm:flex-row gap-3">
         {error && (
-          <div className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          <div className="w-full text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3">
             {error}
           </div>
         )}
 
-        {type === 'expense' && discountAmount > 0 && (
-          <>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-tthird">Subtotal</span>
-              <span className="text-sm text-tthird">
-                Rp {subtotal.toLocaleString('id-ID')}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-tthird">
-                Diskon{discount.type === 'persen' ? ` ${discount.value}%` : ''}
-              </span>
-              <span className="text-sm font-medium text-primary">
-                - Rp {discountAmount.toLocaleString('id-ID')}
-              </span>
-            </div>
-          </>
-        )}
+        <div className="w-full flex items-center justify-between">
+          <div className="text-left">
+            <span className="text-xs text-slate-400 font-semibold block uppercase tracking-wider">
+              Total {type === 'income' ? 'Pemasukan' : 'Pengeluaran'}
+            </span>
+            <span
+              className={`text-xl sm:text-2xl font-extrabold tracking-tight ${
+                type === 'income' ? 'text-emerald-600' : 'text-rose-600'
+              }`}
+            >
+              {type === 'income' ? '+' : '-'}Rp {grandTotal.toLocaleString('id-ID')}
+            </span>
+          </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-tthird font-medium">Total</span>
-          <span className={`text-xl font-bold ${type === 'income' ? 'text-primary' : 'text-red-500'}`}>
-            {type === 'income' ? '+' : '-'}Rp {grandTotal.toLocaleString('id-ID')}
-          </span>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="btn-primary"
+          >
+            {loading ? (
+              <>
+                <FaSpinner className="animate-spin text-sm" />
+                <span>Menyimpan...</span>
+              </>
+            ) : (
+              `Simpan ${type === 'income' ? 'Pemasukan' : 'Pengeluaran'}`
+            )}
+          </button>
         </div>
-
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="w-full bg-primary hover:bg-secondary text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {loading ? (
-            <>
-              <FaSpinner className="animate-spin" /> Menyimpan...
-            </>
-          ) : (
-            `Simpan ${type === 'income' ? 'Pemasukan' : 'Pengeluaran'}`
-          )}
-        </button>
       </div>
     </ModalLayoutInputAndProfil>
   );

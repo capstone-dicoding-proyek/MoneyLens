@@ -1,0 +1,14 @@
+{
+  "name": "moneylens-root",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm --prefix fs/be run lint && npm --prefix fs/fe run lint",
+    "test:be": "npm --prefix fs/be test",
+    "test:fe": "npm --prefix fs/fe test",
+    "test": "npm run test:be && npm run test:fe"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

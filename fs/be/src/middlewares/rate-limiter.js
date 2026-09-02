@@ -1,5 +1,22 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import { RedisStore } from 'rate-limit-redis';
 import response from '../utils/response.js';
+import { redisClient } from '../container.js';
+
+const getRedisStore = (prefix = 'rl') => {
+  if (process.env.NODE_ENV === 'test') {
+    return undefined;
+  }
+  try {
+    return new RedisStore({
+      sendCommand: (...args) => redisClient.sendCommand(...args),
+      prefix: `ratelimit:${prefix}:`,
+    });
+  } catch (err) {
+    console.error('Failed to initialize RedisStore for rate limiter:', err);
+    return undefined;
+  }
+};
 
 const createRateLimiter = ({
   prefix,
@@ -10,6 +27,8 @@ const createRateLimiter = ({
   return rateLimit({
     windowMs,
     max,
+    skip: () => process.env.NODE_ENV === 'test',
+    store: getRedisStore(prefix),
 
     keyGenerator: (req) => {
       return req.user?.id
@@ -39,27 +58,34 @@ export const resetPasswordLimiter = createRateLimiter({
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  skip: () => process.env.NODE_ENV === 'test',
+  store: getRedisStore('login'),
   message: { status: 'fail', message: 'Too many login attempts, try again in 15 minutes' }
 });
 
 export const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 10,
+  skip: () => process.env.NODE_ENV === 'test',
+  store: getRedisStore('register'),
   message: { status: 'fail', message: 'Too many register attempts, try again in 1 hour' }
 });
 
 export const googleLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  skip: () => process.env.NODE_ENV === 'test',
+  store: getRedisStore('google-login'),
   message: { status: 'fail', message: 'Too many requests, try again in 15 minutes' }
 });
 
 export const transactionLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
+  skip: () => process.env.NODE_ENV === 'test',
+  store: getRedisStore('transaction'),
   message: { status: 'fail', message: 'Too many requests, slow down!' }
 });
-
 
 export const uploadOcrLimiter = createRateLimiter({
   prefix: 'upload-ocr',

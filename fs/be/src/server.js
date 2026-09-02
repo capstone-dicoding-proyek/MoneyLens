@@ -1,5 +1,6 @@
 import './env.js';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import './databases/cron-db.js';
 import morgan from 'morgan';
 import cors from 'cors';
@@ -14,6 +15,7 @@ const app = express();
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
+app.use(cookieParser());
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
@@ -61,4 +63,5 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
+export { app };
 export default app;

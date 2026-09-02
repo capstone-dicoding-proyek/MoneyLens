@@ -1,14 +1,13 @@
 import request from 'supertest';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
+import { app } from '../../src/server.js';
 
-const { app } = await import('../src/server.js');
-
-describe('Users Service - HTTP Endpoint Validation', () => {
+describe('Users Module Integration Tests', () => {
   describe('POST /api/users - Register User', () => {
     it('should return 400 when email is missing', async () => {
       const userData = {
         fullname: 'New User',
-        password: 'SecurePassword123',
+        password: 'SecurePassword123!',
       };
 
       const response = await request(app)
@@ -36,7 +35,7 @@ describe('Users Service - HTTP Endpoint Validation', () => {
     it('should return 400 when fullname is missing', async () => {
       const userData = {
         email: 'newuser@example.com',
-        password: 'SecurePassword123',
+        password: 'SecurePassword123!',
       };
 
       const response = await request(app)
@@ -51,7 +50,7 @@ describe('Users Service - HTTP Endpoint Validation', () => {
       const userData = {
         email: 'invalid-email',
         fullname: 'New User',
-        password: 'SecurePassword123',
+        password: 'SecurePassword123!',
       };
 
       const response = await request(app)
@@ -69,39 +68,29 @@ describe('Users Service - HTTP Endpoint Validation', () => {
         .post('/api/users/google-login')
         .send({});
 
-      // Returns 500 because OAuth mock throws error during module load
-      // This is expected in test environment
       expect([400, 500]).toContain(response.statusCode);
     });
   });
 
   describe('POST /api/users/reset-password - Reset Password', () => {
     it('should return 400 when token is missing', async () => {
-      const resetData = {
-        password: 'NewPassword456',
-      };
-
       const response = await request(app)
         .post('/api/users/reset-password')
-        .send(resetData);
+        .send({ password: 'NewPassword123!' });
 
       expect(response.statusCode).toBe(400);
     });
 
     it('should return 400 when password is missing', async () => {
-      const resetData = {
-        token: 'reset-token-123',
-      };
-
       const response = await request(app)
         .post('/api/users/reset-password')
-        .send(resetData);
+        .send({ token: 'reset-token-sample' });
 
       expect(response.statusCode).toBe(400);
     });
   });
 
-  describe('GET /api/users - Get User Logged', () => {
+  describe('GET /api/users - Get Logged-in User Profile', () => {
     it('should return 401 when no authorization token provided', async () => {
       const response = await request(app)
         .get('/api/users');
@@ -116,19 +105,21 @@ describe('Users Service - HTTP Endpoint Validation', () => {
         .set('Authorization', 'Bearer invalid-token');
 
       expect(response.statusCode).toBe(401);
+      expect(response.body.status).toBe('fail');
     });
 
-    it('should return 401 when Authorization header format is wrong', async () => {
+    it('should return 401 when Authorization header format is malformed', async () => {
       const response = await request(app)
         .get('/api/users')
-        .set('Authorization', 'InvalidFormat');
+        .set('Authorization', 'MalformedFormat');
 
       expect(response.statusCode).toBe(401);
+      expect(response.body.status).toBe('fail');
     });
   });
 
   describe('PUT /api/users - Update Fullname', () => {
-    it('should return 401 when no authorization token provided', async () => {
+    it('should return 401 when unauthenticated', async () => {
       const response = await request(app)
         .put('/api/users')
         .send({ fullname: 'Updated Name' });
@@ -137,7 +128,7 @@ describe('Users Service - HTTP Endpoint Validation', () => {
       expect(response.body.status).toBe('fail');
     });
 
-    it('should return 401 when invalid authorization token provided', async () => {
+    it('should return 401 when invalid token provided', async () => {
       const response = await request(app)
         .put('/api/users')
         .set('Authorization', 'Bearer invalid-token')

@@ -1,15 +1,13 @@
-import CurveBgComponent from './CurveBgComponent';
-
 export default function GreenRectangle({ children }) {
   return (
-    <div className="h-screen w-screen relative overflow-hidden">
-      <div className=" max-lg:flex max-lg:justify-center max-lg:items-center h-full w-full max-lg:p-[4%] relative z-10">
+    <div className="auth-page-container">
+      {/* Decorative ambient background */}
+      <div className="pointer-events-none fixed top-0 left-0 w-96 h-96 rounded-full bg-emerald-300/15 blur-3xl" />
+      <div className="pointer-events-none fixed bottom-0 right-0 w-96 h-96 rounded-full bg-teal-300/15 blur-3xl" />
+
+      <div className="w-full max-w-md relative z-10 my-auto py-6">
         {children}
       </div>
-      <div className='overflow-hidden  lg:top-0 lg:right-0 lg:h-screen -z-10 absolute  max-lg:transform max-lg:rotate-90  max-lg:hidden  '>
-        <CurveBgComponent />
-      </div>
-
     </div>
   );
 }

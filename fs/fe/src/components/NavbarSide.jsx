@@ -1,11 +1,8 @@
-/* eslint-disable no-unused-vars */
-import { useState } from 'react';
 import { GoHomeFill } from 'react-icons/go';
-import { FaUser, FaHistory } from 'react-icons/fa';
+import { FaHistory } from 'react-icons/fa';
 import { MdLogout } from 'react-icons/md';
-import { IoMdCloseCircleOutline } from 'react-icons/io';
-import { HiMenuAlt2 } from 'react-icons/hi';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { IoClose } from 'react-icons/io5';
+import { Link, useRouterState } from '@tanstack/react-router';
 import useAuth from '../hooks/useAuth';
 
 const navItems = [
@@ -14,15 +11,21 @@ const navItems = [
 ];
 
 export default function NavbarSide({ isOpen, onChangeIsOpen }) {
-  const { pathname } = useLocation();
-  const { handleLogout } = useAuth();
+  const routerState = useRouterState();
+  const pathname = routerState.location.pathname;
+  const { user, handleLogout } = useAuth();
   const isActive = (link) =>
     link === '/' ? pathname === '/' : pathname.startsWith(link);
+
+  const initials = (user?.fullname || user?.email || 'U')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <>
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 md:hidden"
           onClick={onChangeIsOpen}
         />
       )}
@@ -34,92 +37,102 @@ export default function NavbarSide({ isOpen, onChangeIsOpen }) {
           ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
         style={{
-          width: 220,
+          width: 230,
           background:
-            'linear-gradient(160deg, #1A7A5E 0%, #2FA084 45%, #6FCF97 100%)',
-          borderRadius: '0 20px 20px 0',
-          padding: '28px 16px',
-          boxShadow: '8px 0 32px rgba(47,160,132,0.22)',
+            'linear-gradient(175deg, #135A45 0%, #1A7A5E 40%, #2FA084 100%)',
+          borderRadius: '0 24px 24px 0',
+          padding: '24px 16px',
+          boxShadow: '12px 0 36px rgba(19,90,69,0.18)',
           overflow: 'hidden',
         }}
       >
-        {/* Dekor lingkaran */}
-        <div className="pointer-events-none absolute -top-16 -right-12 w-48 h-48 rounded-full bg-white/[0.07]" />
-        <div className="pointer-events-none absolute bottom-10 -left-10 w-32 h-32 rounded-full bg-white/[0.05]" />
+        {/* Ambient decorative glow */}
+        <div className="pointer-events-none absolute -top-16 -right-12 w-44 h-44 rounded-full bg-emerald-400/10 blur-xl" />
+        <div className="pointer-events-none absolute bottom-12 -left-10 w-36 h-36 rounded-full bg-emerald-300/10 blur-xl" />
 
-        {/* Tombol tutup  */}
+        {/* Mobile close button */}
         <button
           onClick={onChangeIsOpen}
-          className="absolute top-5 right-4 md:hidden text-white/70 hover:text-white transition"
+          className="absolute top-5 right-4 md:hidden text-white/70 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+          aria-label="Tutup menu"
         >
-          <IoMdCloseCircleOutline size={26} />
+          <IoClose size={24} />
         </button>
 
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-2 pb-6 mb-5 border-b border-white/15">
-          <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">M</span>
+        {/* Brand Logo */}
+        <div className="flex items-center gap-3 px-2 pb-6 mb-4 border-b border-white/10">
+          <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shadow-inner">
+            <span className="text-white font-extrabold text-base tracking-tight">M</span>
           </div>
-          <span className="text-white font-semibold text-[15px] tracking-tight">
-            Money<span className="font-extralight text-white">Lens</span>
-          </span>
+          <div>
+            <span className="text-white font-bold text-base tracking-tight block">
+              Money<span className="text-emerald-200 font-light">Lens</span>
+            </span>
+            <span className="text-[10px] text-emerald-200/70 uppercase tracking-widest font-semibold block">
+              Finance Tracker
+            </span>
+          </div>
         </div>
 
-        {/* Nav items */}
-        <nav className="flex-1 flex flex-col gap-1">
-          {navItems.map(({ icon: Icon, label, key, link }) => {
-            const active = isActive(link);
+        {/* Navigation links */}
+        <nav className="flex-1 flex flex-col gap-1.5">
+          {navItems.map((item) => {
+            const NavIcon = item.icon;
+            const active = isActive(item.link);
             return (
               <Link
-                to={link}
-                key={key}
+                to={item.link}
+                key={item.key}
                 onClick={() => {
                   if (window.innerWidth < 768) {
                     onChangeIsOpen();
                   }
                 }}
-                className={`
-                flex items-center gap-3 px-3 py-[10px] rounded-xl w-full text-left
-                transition-all duration-200
-                ${active ? 'bg-white/95' : 'hover:bg-white/18'}
-              `}
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl w-full text-left transition-all duration-200 cursor-pointer ${
+                  active
+                    ? 'bg-white text-[#1A7A5E] shadow-md shadow-emerald-950/20 font-bold'
+                    : 'text-white/85 hover:text-white hover:bg-white/12 font-medium'
+                }`}
               >
                 <span
                   className={`
-                  w-9 h-9 flex items-center justify-center rounded-[9px] flex-shrink-0 transition-all
-                  ${active ? 'bg-[#2FA084]/12' : 'bg-white/15'}
-                `}
+                    w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0 transition-all
+                    ${active ? 'bg-emerald-50 text-[#1A7A5E]' : 'bg-white/10 text-white'}
+                  `}
                 >
-                  <Icon
-                    className={`text-[17px] transition-colors ${
-                      active ? 'text-[#2FA084]' : 'text-white/90'
-                    }`}
-                  />
+                  <NavIcon className="text-base" />
                 </span>
-                <span
-                  className={`text-sm font-medium transition-colors ${
-                    active ? 'text-[#1A7A5E] font-semibold' : 'text-white/90'
-                  }`}
-                >
-                  {label}
-                </span>
+                <span className="text-xs tracking-wide">{item.label}</span>
                 {active && (
-                  <span className="ml-auto w-[6px] h-[6px] rounded-full bg-[#2FA084]" />
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#1A7A5E]" />
                 )}
               </Link>
             );
           })}
         </nav>
 
-        {/* Divider */}
-        <div className="h-px bg-white/12 mx-1 my-3" />
+        {/* User Mini Profile Snippet */}
+        {user && (
+          <div className="p-2.5 rounded-xl bg-white/8 border border-white/10 mb-2 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-white/20 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold text-white truncate">
+                {user.fullname || 'Pengguna'}
+              </div>
+              <div className="text-[10px] text-white/60 truncate">{user.email}</div>
+            </div>
+          </div>
+        )}
 
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-[10px] rounded-xl w-full group transition-all duration-200 bg-white/8 border border-white/12 hover:bg-red-500/20 hover:border-red-400/30">
-          <MdLogout className="text-[17px] text-white/80 group-hover:text-red-300 transition-colors" />
-          <span className="text-sm font-medium text-white/80 group-hover:text-red-300 transition-colors">
+          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl w-full group transition-all duration-200 bg-white/6 border border-white/10 hover:bg-rose-500/20 hover:border-rose-400/30 cursor-pointer text-white/80 hover:text-rose-200"
+        >
+          <MdLogout className="text-base group-hover:text-rose-300 transition-colors" />
+          <span className="text-xs font-semibold group-hover:text-rose-300 transition-colors">
             Keluar
           </span>
         </button>

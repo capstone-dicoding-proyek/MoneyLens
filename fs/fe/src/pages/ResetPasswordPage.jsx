@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sendResetPassword } from '../api/auth';
 import InputComponent from '../components/InputComponent';
@@ -6,7 +6,14 @@ import useInputs from '../hooks/useInput';
 import { getRemainingCooldown, startCooldown } from '../utils/resend-cooldown';
 import { useToast } from '../hooks/useToast';
 import { formatTime } from '../utils/format-time';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from '@tanstack/react-router';
+import GreenRectangle from '../components/LoginPageComponent';
+import LayoutAuthComponent from '../components/LayoutAuthComponent';
+import FormAuthComponent from '../components/FormAuthComponent';
+import ButtonComponent from '../components/ButtonComponent';
+import { MdEmail } from 'react-icons/md';
+
+import { getErrorMessage } from '../utils/get-error-message';
 
 const RESEND_KEY = 'resend_reset_password_end_time';
 const RESEND_COOLDOWN = 180;
@@ -18,6 +25,7 @@ export default function ResetPasswordPage() {
   const timerRef = useRef(null);
   const { addToast } = useToast();
   const navigate = useNavigate();
+
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
@@ -35,14 +43,17 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     const remaining = getRemainingCooldown(RESEND_KEY);
     if (remaining > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCount(remaining);
       startTimer();
     }
     return () => clearInterval(timerRef.current);
-  }, []);
+  }, [startTimer]);
 
   const handleSend = async () => {
+    if (!email.trim()) {
+      addToast('Email tidak boleh kosong', { type: 'error' });
+      return;
+    }
     if (count > 0 || isResending) return;
 
     setIsResending(true);
@@ -55,9 +66,9 @@ export default function ResetPasswordPage() {
         setState: setCount,
       });
       startTimer();
-      navigate('/reset-password');
+      navigate({ to: '/reset-password' });
     } catch (err) {
-      addToast(err?.response?.data?.message || 'Gagal mengirim ulang email', {
+      addToast(getErrorMessage(err, 'Gagal mengirim ulang email reset password.'), {
         type: 'error',
       });
     } finally {
@@ -66,28 +77,55 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <section>
-      <InputComponent
-        label="Email"
-        type="email"
-        placeholder="Masukkan email anda..."
-        value={email}
-        onChangeValue={onChangeEmail}
-      />
-      <button
-        onClick={handleSend}
-        disabled={count > 0 || isResending}
-        style={{
-          opacity: count > 0 || isResending ? 0.5 : 1,
-          cursor: count > 0 || isResending ? 'not-allowed' : 'pointer',
-        }}
-      >
-        {isResending
-          ? 'Mengirim...'
-          : count > 0
-            ? `Kirim ulang dalam ${formatTime(count)}`
-            : 'Kirim'}
-      </button>
-    </section>
+    <GreenRectangle>
+      <LayoutAuthComponent>
+        <div className="text-center space-y-1">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1A7A5E] to-[#2FA084] text-white flex items-center justify-center font-black text-xl mx-auto shadow-md shadow-emerald-800/20 mb-3">
+            M
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Verifikasi Reset Password
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xs mx-auto">
+            Masukkan email Anda untuk menerima tautan konfirmasi.
+          </p>
+        </div>
+
+        <FormAuthComponent>
+          <InputComponent
+            label="Email"
+            type="email"
+            placeholder="nama@email.com"
+            value={email}
+            onChangeValue={onChangeEmail}
+            leftIcon={MdEmail}
+            required
+          />
+
+          <ButtonComponent
+            onClick={handleSend}
+            isLoading={isResending}
+            title={
+              isResending
+                ? 'Mengirim...'
+                : count > 0
+                  ? `Kirim ulang (${formatTime(count)})`
+                  : 'Kirim Tautan'
+            }
+            disabled={count > 0 || isResending}
+            className="w-full py-3"
+          />
+        </FormAuthComponent>
+
+        <div className="text-center pt-2 text-xs text-slate-500">
+          <Link
+            to="/login"
+            className="font-bold text-[#1A7A5E] hover:text-[#2FA084] transition-colors"
+          >
+            Kembali ke Login
+          </Link>
+        </div>
+      </LayoutAuthComponent>
+    </GreenRectangle>
   );
 }

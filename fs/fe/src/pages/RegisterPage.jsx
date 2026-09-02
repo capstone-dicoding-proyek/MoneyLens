@@ -4,11 +4,10 @@ import useInputs from '../hooks/useInput';
 import { useToast } from '../hooks/useToast';
 import FormAuthComponent from '../components/FormAuthComponent';
 import InputComponent from '../components/InputComponent';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import GreenRectangle from '../components/LoginPageComponent';
-import { GoArrowLeft } from 'react-icons/go';
 import { MdEmail } from 'react-icons/md';
-import { FaKeyboard, FaLock, FaUser } from 'react-icons/fa';
+import { FaLock, FaUser } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { useGoogleLogin } from '@react-oauth/google';
 import LayoutAuthComponent from '../components/LayoutAuthComponent';
@@ -24,21 +23,19 @@ export default function RegisterPage() {
     confirm: false,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
   const { handleRegister, handleLoginWithGoogle } = useAuth();
   const { addToast } = useToast();
   const debounceRef = useRef(null);
 
   const loginGoogle = useGoogleLogin({
-    onSuccess: handleLoginWithGoogle,
-    onError: () => addToast('Login gagal!', { type: 'error' }),
+    onSuccess: (token) => handleLoginWithGoogle(token),
+    onError: () => addToast('Pendaftaran Google gagal!', { type: 'error' }),
+    flow: 'auth-code',
   });
-
-
 
   const validate = () => {
     if (!fullname.trim()) {
-      addToast('Nama tidak boleh kosong', { type: 'error' });
+      addToast('Nama lengkap tidak boleh kosong', { type: 'error' });
       return false;
     }
     if (!email.trim()) {
@@ -67,97 +64,124 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     debounceRef.current = setTimeout(async () => {
-      await handleRegister({ fullname, email, password });
-      setIsLoading(false);
-    }, 500);
+      try {
+        await handleRegister({ fullname, email, password });
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
   };
 
   return (
     <GreenRectangle>
       <LayoutAuthComponent>
-        <div className="flex items-center w-92 ">
-          <GoArrowLeft
-            className="cursor-pointer mr-24 size-6"
-            onClick={() => navigate(-1)}
-          />
-          <span>sudah menjadi member? </span>
-          <Link to={'/login'}>
-            <span className="text-primary transition-colors hover:text-secondary cursor-pointer">
-              masuk
-            </span>
-          </Link>
-        </div>
-
-        <div className="font-bold text-primary text-5xl mt-14 max-sm:text-4xl max-sm:mt-10 md:text-4xl md:mt-4">
-          Daftar
-        </div>
-
-        <div className="text-tthird font-light text-sm mt-8 md:mt-4 max-sm:mt-4 md:text-sm">
-          Silakan daftar untuk mulai mengelola dan mencatat keuangan Anda.
+        {/* Brand Header */}
+        <div className="text-center space-y-1">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1A7A5E] to-[#2FA084] text-white flex items-center justify-center font-black text-xl mx-auto shadow-md shadow-emerald-800/20 mb-3">
+            M
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Buat Akun Baru
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Daftar untuk mulai mencatat keuangan dan analisa arus kas.
+          </p>
         </div>
 
         {/* Form */}
-        <FormAuthComponent >
+        <FormAuthComponent>
           <InputComponent
+            label="Nama Lengkap"
             type="text"
-            placeholder="Name"
+            placeholder="John Doe"
             value={fullname}
             onChangeValue={onChangeFullname}
             leftIcon={FaUser}
-          />
-          <InputComponent
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChangeValue={onChangeEmail}
-            leftIcon={MdEmail}
+            required
           />
 
           <InputComponent
+            label="Email"
+            type="email"
+            placeholder="nama@email.com"
+            value={email}
+            onChangeValue={onChangeEmail}
+            leftIcon={MdEmail}
+            required
+          />
+
+          <InputComponent
+            label="Password"
             type={showPassword.password ? 'text' : 'password'}
             toggle={true}
-            placeholder="Password"
+            placeholder="Minimal 8 karakter"
             value={password}
             onChangeToggle={() => setShowPassword((p) => ({ ...p, password: !p.password }))}
             onChangeValue={onChangePassword}
             leftIcon={FaLock}
+            required
           />
 
-          <div className="-space-x-4 md:-space-x-2">
-            <ul className="ml-4 space-y-2 md:space-y-0 text-xs text-tthird list-disc">
-              <li>Password harus minimal 8 karakter</li>
-              <li>
-                Harus mengandung huruf besar, huruf kecil, angka,
-                <br />
-                dan simbol{' '}
-              </li>
-              <li>Contoh simbol: !@#$%^&*</li>
-            </ul>
-          </div>
-
-          {/* Konfirmasi Password */}
           <InputComponent
+            label="Konfirmasi Password"
             type={showPassword.confirm ? 'text' : 'password'}
             toggle={true}
-            onChangeToggle={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))}
-            placeholder="Password"
+            placeholder="Ketik ulang password..."
             value={confirmPassword}
+            onChangeToggle={() => setShowPassword((p) => ({ ...p, confirm: !p.confirm }))}
             onChangeValue={onChangeConfirmPassword}
-            leftIcon={FaKeyboard}
+            leftIcon={FaLock}
+            required
           />
-        </FormAuthComponent>
 
-        <div className="flex items-center gap-20 mt-10 max-sm:mt-6">
+          <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1 text-[11px] text-slate-500">
+            <span className="font-semibold text-slate-700 block">Kriteria Password:</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${password.length >= 8 ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+              <span>Minimal 8 karakter</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+              <span>Kombinasi huruf besar & kecil</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${/[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password) ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+              <span>Mengandung angka & simbol (@#$%^&*)</span>
+            </div>
+          </div>
+
           <ButtonComponent
             isLoading={isLoading}
             onClick={onSubmitRegister}
-            title='Submit'
+            title="Daftar Sekarang"
+            className="w-full py-3"
           />
-          <div className="text-lg font-normal text-tthird">or</div>
-          <FcGoogle
+
+          <div className="relative flex items-center justify-center my-3">
+            <div className="border-t border-slate-200 w-full" />
+            <span className="bg-white px-3 text-xs text-slate-400 font-medium uppercase tracking-wider absolute">
+              atau
+            </span>
+          </div>
+
+          <button
+            type="button"
             onClick={() => loginGoogle()}
-            className="cursor-pointer text-4xl"
-          />
+            className="btn-outline w-full py-2.5 flex items-center justify-center gap-2.5 font-semibold text-xs sm:text-sm border-slate-200 hover:border-slate-300 shadow-2xs"
+          >
+            <FcGoogle className="text-xl" />
+            <span>Daftar dengan Google</span>
+          </button>
+        </FormAuthComponent>
+
+        <div className="text-center pt-2 text-xs text-slate-500">
+          Sudah punya akun?{' '}
+          <Link
+            to="/login"
+            className="font-bold text-[#1A7A5E] hover:text-[#2FA084] transition-colors"
+          >
+            Masuk ke Akun
+          </Link>
         </div>
       </LayoutAuthComponent>
     </GreenRectangle>

@@ -5,17 +5,30 @@ export default function ButtonComponent({
   disabled = false,
   title,
   onClick,
+  type = 'button',
+  variant = 'primary',
+  className = '',
 }) {
+  const variantClass =
+    variant === 'danger'
+      ? 'btn-danger'
+      : variant === 'secondary'
+        ? 'btn-secondary'
+        : variant === 'outline'
+          ? 'btn-outline'
+          : 'btn-primary';
+
   return (
     <button
-      disabled={disabled}
+      disabled={disabled || isLoading}
       onClick={onClick}
-      type="button"
-      className="bg-primary text-white px-8 py-2 rounded-lg cursor-pointer text-xl font-bold tracking-wider bg-linear-to-r from-primary to-secondary transition-colors hover:bg-[#1e6b57] hover:from-[#1e6b57] hover:to-[#1e6b57] duration-300"
+      type={type}
+      className={`${variantClass} ${className}`}
     >
       {isLoading ? (
         <>
-          <FaSpinner className="animate-spin" /> Loading...
+          <FaSpinner className="animate-spin text-base" />
+          <span>Memproses...</span>
         </>
       ) : (
         title

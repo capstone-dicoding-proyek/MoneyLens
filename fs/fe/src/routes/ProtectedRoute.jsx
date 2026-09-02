@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from '@tanstack/react-router';
 import useAuth from '../hooks/useAuth';
 
 
@@ -6,7 +6,7 @@ export function PrivateRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <h1>Loading...</h1>;
+    return <Outlet />;
   }
 
   if (!user) {
@@ -29,7 +29,7 @@ export function GuestRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <h1>Loading...</h1>;
+    return <Outlet />;
   }
 
   if (user) {

@@ -1,7 +1,7 @@
-export default function FormAuthComponent({ children }){
+export default function FormAuthComponent({ children }) {
   return (
-    <section  className='space-y-14 mt-8 max-sm:space-y-10 '>
+    <div className="space-y-4">
       {children}
-    </section>
+    </div>
   );
 }

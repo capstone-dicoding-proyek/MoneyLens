@@ -1,18 +1,15 @@
-/* eslint-disable no-unused-vars */
-import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin } from '@react-oauth/google';
 import FormAuthComponent from '../components/FormAuthComponent';
 import InputComponent from '../components/InputComponent';
 import { useRef, useState } from 'react';
 import useInputs from '../hooks/useInput';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import useAuth from '../hooks/useAuth';
 import { useToast } from '../hooks/useToast';
 import GreenRectangle from '../components/LoginPageComponent';
-import { GoArrowLeft } from 'react-icons/go';
 import { MdEmail } from 'react-icons/md';
 import { FaLock } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
-import LoadingHand from '../components/LoadingHand';
 import LayoutAuthComponent from '../components/LayoutAuthComponent';
 import ButtonComponent from '../components/ButtonComponent';
 
@@ -28,15 +25,23 @@ export default function LoginPage() {
   const handleToggle = () => setShowPassword((prev) => !prev);
 
   const onSubmitLogin = () => {
+    if (!email || !password) {
+      addToast('Email dan password wajib diisi', { type: 'error' });
+      return;
+    }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setIsLoading(true);
     debounceRef.current = setTimeout(async () => {
-      await handleLogin({ email, password });
-      setIsLoading(false);
-    }, 500);
+      try {
+        await handleLogin({ email, password });
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
   };
+
   const loginGoogle = useGoogleLogin({
-    onSuccess: (token)=>handleLoginWithGoogle(token),
+    onSuccess: (token) => handleLoginWithGoogle(token),
     onError: () => addToast('Login gagal!', { type: 'error' }),
     flow: 'auth-code',
   });
@@ -44,75 +49,83 @@ export default function LoginPage() {
   return (
     <GreenRectangle>
       <LayoutAuthComponent>
-        <div className="flex items-center  w-92">
-          <GoArrowLeft className="cursor-pointer mr-25 size-6" />
-          <span className="max-sm:text-xs ">belum menjadi member? </span>
-          <Link to="/register">
-            <span className="text-primary transition-colors hover:text-secondary cursor-pointer max-sm:text-xs">
-              daftar
-            </span>
-          </Link>
-        </div>
-
-        <div className="font-bold text-primary text-5xl mt-14 max-sm:text-4xl">
-          Masuk
-        </div>
-
-        <div className="text-tthird font-light text-sm mt-8">
-          Silakan masuk untuk mulai mengelola dan mencatat keuangan Anda.
+        {/* Brand Header */}
+        <div className="text-center space-y-1">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1A7A5E] to-[#2FA084] text-white flex items-center justify-center font-black text-xl mx-auto shadow-md shadow-emerald-800/20 mb-3">
+            M
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Masuk ke MoneyLens
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Kelola keuangan dan catat pengeluaran Anda dengan mudah.
+          </p>
         </div>
 
         {/* Form */}
-        <FormAuthComponent >
+        <FormAuthComponent>
           <InputComponent
+            label="Email"
             type="email"
-            placeholder="Email"
+            placeholder="nama@email.com"
             value={email}
             onChangeValue={onChangeEmail}
             leftIcon={MdEmail}
+            required
           />
 
           <InputComponent
-            placeholder='Password'
+            label="Password"
+            placeholder="Masukkan kata sandi..."
             toggle={true}
             onChangeToggle={handleToggle}
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChangeValue={onChangePassword}
             leftIcon={FaLock}
+            required
           />
 
-          <div className="-space-x-4y">
-            <ul className="ml-4 space-y-2 text-xs text-tthird list-disc ">
-              <li>Password harus minimal 8 karakter</li>
-              <li>
-                Harus mengandung huruf besar, huruf kecil, angka,
-                <br />
-                dan simbol{' '}
-              </li>
-              <li>Contoh simbol: !@#$%^&*</li>
-            </ul>
+          <div className="flex items-center justify-end">
+            <Link
+              to="/reset-password"
+              className="text-xs font-semibold text-[#1A7A5E] hover:text-[#2FA084] transition-colors"
+            >
+              Lupa Password?
+            </Link>
           </div>
-        </FormAuthComponent>
 
-        <div className="flex items-center gap-20 mt-10">
           <ButtonComponent
             onClick={onSubmitLogin}
-            title='Masuk'
+            isLoading={isLoading}
+            title="Masuk"
+            className="w-full py-3"
           />
 
-          <div className="text-lg font-normal text-tthird">or</div>
-          <FcGoogle
-            onClick={() => loginGoogle()}
-            className="cursor-pointer text-4xl"
-          />
-        </div>
-
-        <div className="mt-4">
-          <Link to='/reset-password'>
-            <span className="text-tthird text-sm mt-8 hover:text-primary transition-colors duration-300 cursor-pointer max-sm:text-xs">
-              Lupa Password atau Email?
+          <div className="relative flex items-center justify-center my-4">
+            <div className="border-t border-slate-200 w-full" />
+            <span className="bg-white px-3 text-xs text-slate-400 font-medium uppercase tracking-wider absolute">
+              atau
             </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => loginGoogle()}
+            className="btn-outline w-full py-2.5 flex items-center justify-center gap-2.5 font-semibold text-xs sm:text-sm border-slate-200 hover:border-slate-300 shadow-2xs"
+          >
+            <FcGoogle className="text-xl" />
+            <span>Masuk dengan Google</span>
+          </button>
+        </FormAuthComponent>
+
+        <div className="text-center pt-2 text-xs text-slate-500">
+          Belum punya akun?{' '}
+          <Link
+            to="/register"
+            className="font-bold text-[#1A7A5E] hover:text-[#2FA084] transition-colors"
+          >
+            Daftar Sekarang
           </Link>
         </div>
       </LayoutAuthComponent>

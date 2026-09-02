@@ -2,7 +2,6 @@ import 'dotenv/config';
 import { createClient } from 'redis';
 class CacheService {
   constructor() {
-    console.log(process.env.REDIS_PASSWORD || undefined);
     this._client = createClient({
       username: 'default',
       socket: {
@@ -17,6 +16,14 @@ class CacheService {
     });
 
     this._client.connect().catch(console.error);
+  }
+
+  get client() {
+    return this._client;
+  }
+
+  async sendCommand(...args) {
+    return this._client.sendCommand(args);
   }
 
   async set(key, value, expirationInSecond = 300) {

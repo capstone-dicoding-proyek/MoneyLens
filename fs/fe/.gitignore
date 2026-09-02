@@ -27,3 +27,5 @@ dist-ssr
 
 .agents
 skills-lock.json
+test-results/
+playwright-report/

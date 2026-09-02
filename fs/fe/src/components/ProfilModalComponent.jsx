@@ -2,86 +2,115 @@ import { useState } from 'react';
 import ModalLayoutInputAndProfil from './ModalLayoutInputAndProfil';
 import useAuth from '../hooks/useAuth';
 import useInputs from '../hooks/useInput';
-import { putUserName } from '../api/user';
 import { useToast } from '../hooks/useToast';
 import { FaSpinner } from 'react-icons/fa';
+import { useUpdateProfileMutation } from '../hooks/useTransactionsQuery';
+import { IoMailOutline, IoPersonOutline } from 'react-icons/io5';
+import { getErrorMessage } from '../utils/get-error-message';
 
 export default function ProfilModalComponent({ onClose }) {
   const { addToast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { user } = useAuth();
-  const [fullName, onChangeFullName] = useInputs(user.fullname);
+  const { user, refreshUser } = useAuth();
+  const [fullName, onChangeFullName] = useInputs(user?.fullname || '');
+  const updateMutation = useUpdateProfileMutation();
+  const loading = updateMutation.isPending;
+
   const handleUpdateName = async () => {
-    if (fullName.trim() === user.fullname.trim()) {
+    if (fullName.trim() === user?.fullname?.trim()) {
       onClose();
       return;
     }
-    setLoading(true);
     try {
-      await putUserName({ fullname: fullName });
-      setLoading(false);
+      await updateMutation.mutateAsync({ fullname: fullName });
+      await refreshUser?.();
       onClose();
       addToast('Update profil berhasil!', { type: 'success' });
     } catch (err) {
-      setLoading(false);
       setError(
-        err?.response?.data?.message || err?.message || 'Terjadi kesalahan',
+        getErrorMessage(err, 'Gagal memperbarui profil. Silakan coba lagi.'),
       );
-    } finally {
-      setLoading(false);
     }
   };
-  return (
-    <ModalLayoutInputAndProfil title="Profil" onClose={onClose}>
-      {/* body */}
-      <div className="group border border-line rounded-xl m-3 p-3 space-y-2 bg-gray-50 hover:bg-white transition">
-        {/* Type  Name */}
 
-        <div className="flex gap-2 items-center">
-          <div className="flex-1">
-            <label className="text-xs text-tthird mb-1 block">Email</label>
-            <div className="flex items-center border border-line rounded-lg overflow-hidden bg-white focus-within:border-primary">
-              <p className="flex-1 px-2 py-1.5 text-sm w-0">{user.email}</p>
-            </div>
+  const initials = (user?.fullname || user?.email || 'U')
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <ModalLayoutInputAndProfil title="Profil Pengguna" onClose={onClose}>
+      <div className="p-6 space-y-5">
+        {/* User Hero Avatar */}
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1A7A5E] to-[#2FA084] text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-emerald-800/20">
+            {initials}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-base text-slate-900 truncate">
+              {user?.fullname || 'Pengguna MoneyLens'}
+            </h3>
+            <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+            {user?.verified_email && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full mt-1">
+                Terverifikasi
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="flex gap-2 items-center">
-          <div className="flex-1">
-            <label className="text-xs text-tthird mb-1 block">Nama</label>
-            <div className="flex items-center border border-line rounded-lg overflow-hidden bg-white focus-within:border-primary">
+        {/* Form Body */}
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="input-label">Email</label>
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-sm">
+              <IoMailOutline className="text-slate-400 text-base" />
+              <span className="truncate">{user?.email}</span>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="input-label">Nama Lengkap</label>
+            <div className="relative flex items-center">
+              <IoPersonOutline className="absolute left-3.5 text-slate-400 text-base pointer-events-none" />
               <input
                 type="text"
                 onChange={(e) => onChangeFullName(e.target.value)}
                 value={fullName}
-                placeholder="Ubah nama..."
-                className="flex-1 px-2 py-1.5 text-sm focus:outline-none w-0"
+                placeholder="Masukkan nama baru..."
+                className="input-field pl-10"
               />
             </div>
           </div>
         </div>
-      </div>
 
-      {/*   Total  Submit */}
-      <div className="flex-shrink-0 border-t border-line px-5 py-4 space-y-3">
         {error && (
-          <div className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3">
             {error}
           </div>
         )}
+      </div>
+
+      <div className="modal-footer">
+        <button
+          type="button"
+          onClick={onClose}
+          className="btn-outline"
+        >
+          Batal
+        </button>
         <button
           onClick={handleUpdateName}
           type="button"
           disabled={loading}
-          className="w-full bg-primary hover:bg-secondary text-white font-semibold py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+          className="btn-primary"
         >
           {loading ? (
             <>
-              <FaSpinner className="animate-spin" /> Menyimpan...
+              <FaSpinner className="animate-spin" />
+              <span>Menyimpan...</span>
             </>
           ) : (
-            'Simpan'
+            'Simpan Perubahan'
           )}
         </button>
       </div>

@@ -1,53 +1,42 @@
 import request from 'supertest';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect } from 'vitest';
+import { app } from '../../src/server.js';
 
-const { app } = await import('../src/server.js');
-
-describe('Authentications Service - HTTP Endpoint Validation', () => {
-  describe('POST /api/auth - Login', () => {
+describe('Authentications Module Integration Tests', () => {
+  describe('POST /api/auth - User Login', () => {
     it('should return 400 when email is missing', async () => {
-      const loginData = {
-        password: 'ValidPassword123',
-      };
-
       const response = await request(app)
         .post('/api/auth')
-        .send(loginData);
+        .send({ password: 'Password123!' });
 
       expect(response.statusCode).toBe(400);
       expect(response.body.status).toBe('fail');
     });
 
     it('should return 400 when password is missing', async () => {
-      const loginData = {
-        email: 'user@example.com',
-      };
-
       const response = await request(app)
         .post('/api/auth')
-        .send(loginData);
+        .send({ email: 'user@example.com' });
 
       expect(response.statusCode).toBe(400);
       expect(response.body.status).toBe('fail');
     });
 
     it('should return 400 when email format is invalid', async () => {
-      const loginData = {
-        email: 'invalid-email',
-        password: 'ValidPassword123',
-      };
-
       const response = await request(app)
         .post('/api/auth')
-        .send(loginData);
+        .send({
+          email: 'not-an-email',
+          password: 'Password123!',
+        });
 
       expect(response.statusCode).toBe(400);
       expect(response.body.status).toBe('fail');
     });
   });
 
-  describe('PUT /api/auth - Add Refresh Token (Get New Access Token)', () => {
-    it('should return 400 when refresh token is missing', async () => {
+  describe('PUT /api/auth - Refresh Access Token', () => {
+    it('should return 400 when refresh token is missing in cookie and body', async () => {
       const response = await request(app)
         .put('/api/auth')
         .send({});
@@ -58,7 +47,7 @@ describe('Authentications Service - HTTP Endpoint Validation', () => {
   });
 
   describe('DELETE /api/auth - Logout', () => {
-    it('should return 400 when refresh token is missing', async () => {
+    it('should return 400 when refresh token is missing in cookie and body', async () => {
       const response = await request(app)
         .delete('/api/auth')
         .send({});
@@ -68,8 +57,8 @@ describe('Authentications Service - HTTP Endpoint Validation', () => {
     });
   });
 
-  describe('GET /api/auth/verify-email - Verify Email', () => {
-    it('should return 400 when token is missing', async () => {
+  describe('GET /api/auth/verify-email - Verify Email Token', () => {
+    it('should return 400 when token query is missing', async () => {
       const response = await request(app)
         .get('/api/auth/verify-email');
 
@@ -79,7 +68,7 @@ describe('Authentications Service - HTTP Endpoint Validation', () => {
   });
 
   describe('POST /api/auth/resend-verif - Resend Email Verification', () => {
-    it('should return 401 when authorization header is missing', async () => {
+    it('should return 401 when unauthenticated', async () => {
       const response = await request(app)
         .post('/api/auth/resend-verif');
 
@@ -87,12 +76,13 @@ describe('Authentications Service - HTTP Endpoint Validation', () => {
       expect(response.body.status).toBe('fail');
     });
 
-    it('should return 401 when authorization token is invalid', async () => {
+    it('should return 401 when token is invalid', async () => {
       const response = await request(app)
         .post('/api/auth/resend-verif')
         .set('Authorization', 'Bearer invalid-token');
 
       expect(response.statusCode).toBe(401);
+      expect(response.body.status).toBe('fail');
     });
   });
 
@@ -107,13 +97,9 @@ describe('Authentications Service - HTTP Endpoint Validation', () => {
     });
 
     it('should return 400 when email format is invalid', async () => {
-      const resetData = {
-        email: 'invalid-email',
-      };
-
       const response = await request(app)
         .post('/api/auth/reset-password')
-        .send(resetData);
+        .send({ email: 'invalid-email-format' });
 
       expect(response.statusCode).toBe(400);
       expect(response.body.status).toBe('fail');

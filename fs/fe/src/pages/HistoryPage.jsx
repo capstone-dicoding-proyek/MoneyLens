@@ -1,13 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import LayoutMainContent from '../components/LayoutMainContent';
 import HistoryCardComponent from '../components/HistoryCardComponent';
 import { getTransactionHistory } from '../api/transaction';
+import { QUERY_KEYS } from '../api/query-keys';
 import {
   FaAngleLeft,
   FaAngleRight,
   FaSearch,
+  FaSpinner,
   FaCaretUp,
   FaCaretDown,
 } from 'react-icons/fa';
@@ -49,6 +52,7 @@ const MONTHS = [
 
 
 export default function HistoryPage() {
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState({
     modalItem: false,
     modalNavbar: false,
@@ -64,6 +68,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [stickyTitle, setStickyTitle] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -81,14 +86,26 @@ export default function HistoryPage() {
   const scrollRef = useRef(null);
   const sentinelRef = useRef(null);
   const debounceRef = useRef(null);
+
   /* handle search */
   const handleSearchInput = (val) => {
     setSearchInput(val);
     clearTimeout(debounceRef.current);
+    if (val.trim() !== search) {
+      setIsSearching(true);
+    }
     debounceRef.current = setTimeout(() => {
       setSearch(val);
       setPage(1);
-    }, 400);
+    }, 1000);
+  };
+
+  const handleClearSearch = () => {
+    clearTimeout(debounceRef.current);
+    setSearchInput('');
+    setSearch('');
+    setPage(1);
+    setIsSearching(false);
   };
 
   const buildParams = useCallback(
@@ -141,7 +158,11 @@ export default function HistoryPage() {
     setLoading(true);
     setPage(1);
     try {
-      const res = await getTransactionHistory(params);
+      const res = await queryClient.fetchQuery({
+        queryKey: QUERY_KEYS.history(params),
+        queryFn: () => getTransactionHistory(params),
+        staleTime: 1000 * 60 * 5,
+      });
       const payload = res.data;
       setHistory(payload.history ?? []);
       setSummary(payload.summary ?? { income: 0, expense: 0, balance: 0 });
@@ -161,8 +182,9 @@ export default function HistoryPage() {
       console.error(err);
     } finally {
       setLoading(false);
+      setIsSearching(false);
     }
-  }, [buildParams, activePeriod]);
+  }, [buildParams, activePeriod, queryClient]);
 
   /* load more */
   const loadMore = useCallback(async () => {
@@ -173,7 +195,11 @@ export default function HistoryPage() {
 
     setLoadingMore(true);
     try {
-      const res = await getTransactionHistory(params);
+      const res = await queryClient.fetchQuery({
+        queryKey: QUERY_KEYS.history(params),
+        queryFn: () => getTransactionHistory(params),
+        staleTime: 1000 * 60 * 5,
+      });
       const payload = res.data;
 
       setHistory((prev) => [...prev, ...(payload.history ?? [])]);
@@ -184,7 +210,7 @@ export default function HistoryPage() {
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMore, page, buildParams]);
+  }, [loadingMore, hasMore, page, buildParams, queryClient]);
 
   /* infinite scroll */
   useEffect(() => {
@@ -316,33 +342,54 @@ export default function HistoryPage() {
       )}
       <div className="w-full flex flex-col gap-5 p-6 md:p-10 overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="md:hidden">
-            <button
-              type="button"
-              onClick={() =>
-                setIsOpen((p) => ({ ...p, modalNavbar: !p.modalNavbar }))
-              }
-            >
-              <RxHamburgerMenu className="text-3xl active:ring-1 active:ring-primary transition ease-in" />
-            </button>
+        <div className="flex items-center justify-between gap-4 pb-1">
+          <div className="flex items-center gap-3">
+            <div className="md:hidden">
+              <button
+                type="button"
+                onClick={() =>
+                  setIsOpen((p) => ({ ...p, modalNavbar: !p.modalNavbar }))
+                }
+                className="btn-icon"
+                aria-label="Buka Menu"
+              >
+                <RxHamburgerMenu className="text-2xl" />
+              </button>
+            </div>
+            <div>
+              <h1 className="font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+                Riwayat Mutasi
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                Daftar lengkap catatan keuangan dan pelacakan transaksi
+              </p>
+            </div>
           </div>
-          <div className="max-sm:hidden font-bold text-2xl">Riwayat</div>
-          <div className="relative flex">
+
+          <div className="relative flex items-center">
             <input
               type="text"
               placeholder="Cari transaksi..."
               value={searchInput}
               onChange={(e) => handleSearchInput(e.target.value)}
-              className="focus:outline-none border border-line p-2 pl-4 pr-10 rounded-full text-sm bg-white placeholder:text-tthird focus:border-primary transition w-52"
+              className="w-48 sm:w-64 px-4 py-2 pl-9 pr-8 rounded-xl border border-slate-200 bg-white text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2FA084] focus:ring-2 focus:ring-emerald-500/15 shadow-2xs transition-all"
             />
-            {searchInput.trim() === '' ? (
-              <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-tthird text-sm" />
-            ) : (
-              <IoCloseOutline
-                onClick={() => handleSearchInput('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-tthird text-sm"
-              />
+            <div className="absolute left-3 flex items-center justify-center pointer-events-none text-xs">
+              {isSearching ? (
+                <FaSpinner className="animate-spin text-[#1A7A5E] text-xs" />
+              ) : (
+                <FaSearch className="text-slate-400 text-xs" />
+              )}
+            </div>
+            {searchInput.trim() !== '' && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-2.5 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer rounded-full hover:bg-slate-100 transition-colors"
+                aria-label="Hapus pencarian"
+              >
+                <IoCloseOutline className="text-base" />
+              </button>
             )}
           </div>
         </div>
@@ -353,14 +400,14 @@ export default function HistoryPage() {
             title="Pemasukan"
             amount={summary.income}
             change={incomeChange}
-            colorClass="text-primary"
+            colorClass="text-emerald-600"
             loading={loading}
           />
           <SummaryCardComponent
             title="Pengeluaran"
             amount={summary.expense}
             change={-expenseChange}
-            colorClass="text-red-500"
+            colorClass="text-rose-600"
             loading={loading}
           />
           <SummaryCardComponent
@@ -368,7 +415,7 @@ export default function HistoryPage() {
             amount={summary.balance}
             change={balanceChange}
             colorClass={
-              summary.balance >= 0 ? 'text-green-600' : 'text-red-600'
+              summary.balance >= 0 ? 'text-emerald-700' : 'text-rose-700'
             }
             balance={summary.balance}
             income={summary.income}
@@ -377,30 +424,75 @@ export default function HistoryPage() {
           />
         </div>
 
-        {/* Period Tabs */}
-        <div className="flex flex-wrap gap-2">
-          {PERIODS.map((p) => (
-            <button
-              key={p}
-              onClick={() => {
-                setActivePeriod(p);
-                setPage(1);
-              }}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium border transition duration-200 cursor-pointer
-                ${
-            activePeriod === p
-              ? 'bg-primary text-white border-primary'
-              : 'border-line text-tthird hover:border-primary hover:text-primary'
-            }`}
-            >
-              {p}
-            </button>
-          ))}
+        {/* Period Tabs & Navigator Row */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2 p-1.5 bg-white/60 backdrop-blur-xs rounded-2xl border border-slate-200/80 shadow-xs">
+            {PERIODS.map((p) => (
+              <button
+                key={p}
+                onClick={() => {
+                  setActivePeriod(p);
+                  setPage(1);
+                }}
+                className={
+                  activePeriod === p
+                    ? 'pill-button-active'
+                    : 'pill-button-inactive'
+                }
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          {/* Type filter badge dropdown */}
+          <div className="flex items-center gap-2">
+            <ModalTypeComponent
+              isOpen={isOpen.modalType}
+              setIsOpen={() =>
+                setIsOpen((p) => ({ ...p, modalType: !p.modalType }))
+              }
+              activeType={activeType}
+              buttons={[
+                {
+                  type: '',
+                  title: 'Semua Transaksi',
+                  onHandle: () => {
+                    setActiveType('');
+                    setPage(1);
+                    setIsOpen((p) => ({ ...p, modalType: false }));
+                  },
+                },
+                {
+                  type: 'income',
+                  title: 'Pemasukan Saja',
+                  onHandle: () => {
+                    setActiveType((prev) =>
+                      prev === 'income' ? '' : 'income',
+                    );
+                    setPage(1);
+                    setIsOpen((p) => ({ ...p, modalType: false }));
+                  },
+                },
+                {
+                  type: 'expense',
+                  title: 'Pengeluaran Saja',
+                  onHandle: () => {
+                    setActiveType((prev) =>
+                      prev === 'expense' ? '' : 'expense',
+                    );
+                    setPage(1);
+                    setIsOpen((p) => ({ ...p, modalType: false }));
+                  },
+                },
+              ]}
+            />
+          </div>
         </div>
 
         {/* Custom Date Picker */}
         {activePeriod === 'Custom' && (
-          <div className="flex flex-wrap items-center gap-2 p-3 bg-white border border-line rounded-xl">
+          <div className="card-base p-4">
             <CustomDatePickerComponent
               customEnd={customEnd}
               customStart={customStart}
@@ -413,27 +505,27 @@ export default function HistoryPage() {
 
         {/* Navigator */}
         {activePeriod !== 'Custom' && (
-          <div className="flex items-center justify-between bg-white border border-line rounded-xl px-5 py-3">
+          <div className="card-base p-4 flex items-center justify-between shadow-2xs">
             <button
               onClick={goPrev}
               disabled={!canGoPrev}
-              className="flex items-center gap-2 text-tthird hover:text-primary transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              className="btn-outline text-xs px-3 py-1.5"
             >
               <FaAngleLeft />
-              <span className="text-sm hidden sm:block">{getPrevLabel()}</span>
+              <span className="hidden sm:inline">{getPrevLabel()}</span>
             </button>
             <div className="text-center">
-              <div className="font-bold text-primary text-lg">
+              <div className="font-extrabold text-slate-900 text-base sm:text-lg tracking-tight">
                 {getPeriodLabel()}
               </div>
-              <div className="text-xs text-tthird">{activePeriod}</div>
+              <div className="text-xs text-slate-400 font-medium">{activePeriod}</div>
             </div>
             <button
               onClick={goNext}
               disabled={!canGoNext}
-              className="flex items-center gap-2 text-tthird hover:text-primary transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              className="btn-outline text-xs px-3 py-1.5"
             >
-              <span className="text-sm hidden sm:block">{getNextLabel()}</span>
+              <span className="hidden sm:inline">{getNextLabel()}</span>
               <FaAngleRight />
             </button>
           </div>
@@ -441,84 +533,66 @@ export default function HistoryPage() {
 
         {/* Transaction List */}
         <div
-          className="bg-white rounded-xl border border-line overflow-hidden flex flex-col"
+          className="card-base p-0 overflow-hidden flex flex-col shadow-xs"
           style={{ minHeight: 400 }}
         >
-          <div className="sticky top-0 bg-white border-b border-line px-5 py-2 z-10 flex items-center justify-between">
-            {/* Title */}
+          <div className="sticky top-0 bg-slate-50/90 backdrop-blur-xs border-b border-slate-100 px-6 py-3 z-10 flex items-center justify-between">
             <span
-              className={`text-sm font-semibold text-tthird transition-opacity duration-200 ${stickyTitle ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              className={`text-xs font-bold text-slate-500 uppercase tracking-wider transition-opacity duration-200 ${
+                stickyTitle ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
             >
               {stickyTitle}
             </span>
-            {/* modal type */}
-            <ModalTypeComponent
-              isOpen={isOpen.modalType}
-              setIsOpen={() =>
-                setIsOpen((p) => ({ ...p, modalType: !p.modalType }))
-              }
-              activeType={activeType}
-              buttons={[
-                {
-                  type: 'income',
-                  title: 'Pemasukan',
-                  onHandle: () => {
-                    setActiveType((prev) =>
-                      prev === 'income' ? '' : 'income',
-                    );
-                    setPage(1);
-                    setIsOpen((p) => ({ ...p, modalType: false }));
-                  },
-                },
-                {
-                  type: 'expense',
-                  title: 'Pengeluaran',
-                  onHandle: () => {
-                    setActiveType((prev) =>
-                      prev === 'expense' ? '' : 'expense',
-                    );
-                    setPage(1);
-                    setIsOpen((p) => ({ ...p, modalType: false }));
-                  },
-                },
-              ]}
-            />
+            <div className="text-xs font-semibold text-slate-400">
+              {activeType === 'income'
+                ? 'Hanya Pemasukan'
+                : activeType === 'expense'
+                  ? 'Hanya Pengeluaran'
+                  : 'Semua Kategori'}
+            </div>
           </div>
 
           <div
             ref={scrollRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto scrollbar-hide"
+            className="flex-1 overflow-y-auto custom-scrollbar"
             style={{ maxHeight: 560 }}
           >
             {loading ? (
-              <div className="p-5 space-y-3">
+              <div className="p-6 space-y-3">
                 {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
-                    className="h-16 bg-gray-100 rounded-xl animate-pulse"
+                    className="h-16 bg-slate-100 rounded-2xl animate-pulse"
                   />
                 ))}
               </div>
             ) : grouped.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-tthird gap-2">
+              <div className="flex flex-col items-center justify-center h-64 text-slate-400 gap-2 p-6 text-center">
                 <span className="text-4xl">📭</span>
-                <span className="text-sm">
+                <span className="text-sm font-semibold text-slate-600">
                   {searchInput
-                    ? 'Tidak ada hasil pencarian'
-                    : 'Tidak ada transaksi di periode ini'}
+                    ? 'Tidak ada transaksi yang cocok dengan pencarian'
+                    : 'Belum ada catatan transaksi pada periode ini'}
+                </span>
+                <span className="text-xs text-slate-400">
+                  Ubah filter periode atau tambahkan transaksi baru.
                 </span>
               </div>
             ) : (
               grouped.map(([dateKey, items]) => (
                 <div key={dateKey}>
-                  <div data-date={getDateLabel(dateKey)} className="px-5 pt-5">
-                    <div className="flex justify-between">
-                      <div className="text-sm font-semibold text-tthird mb-3">
+                  <div data-date={getDateLabel(dateKey)} className="px-6 pt-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                         {getDateLabel(dateKey)}
                       </div>
+                      <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                        {items.length} transaksi
+                      </span>
                     </div>
-                    <div className="space-y-2 pb-4 border-b border-line last:border-0">
+                    <div className="space-y-2.5 pb-4 border-b border-slate-100 last:border-0">
                       {items.map((tx) => (
                         <div
                           key={tx.id}
@@ -529,21 +603,21 @@ export default function HistoryPage() {
                       ))}
                     </div>
                   </div>
-                  {/* infinite scroll  */}
-                  <div ref={sentinelRef} className="py-3 flex justify-center">
+                  {/* infinite scroll */}
+                  <div ref={sentinelRef} className="py-4 flex justify-center">
                     {loadingMore && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         {[...Array(3)].map((_, i) => (
                           <div
                             key={i}
-                            className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                            className="w-2 h-2 bg-[#2FA084] rounded-full animate-bounce"
                             style={{ animationDelay: `${i * 0.15}s` }}
                           />
                         ))}
                       </div>
                     )}
                     {!hasMore && history.length > 0 && (
-                      <div className="text-xs text-tthird">
+                      <div className="text-xs text-slate-400 font-medium">
                         Semua transaksi sudah ditampilkan
                       </div>
                     )}
