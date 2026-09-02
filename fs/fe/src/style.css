@@ -97,6 +97,18 @@ body {
   @apply block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider;
 }
 
+.form-error-alert {
+  @apply w-full flex items-start gap-3 px-4 py-3 rounded-2xl bg-rose-50/90 border border-rose-200/90 text-rose-800 shadow-2xs transition-all duration-200;
+}
+
+.form-error-icon {
+  @apply flex items-center justify-center text-rose-600 bg-rose-100/90 p-1.5 rounded-xl flex-shrink-0 mt-0.5;
+}
+
+.form-error-close-btn {
+  @apply text-rose-400 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-100/70 transition-colors cursor-pointer flex-shrink-0;
+}
+
 /* ==========================================================================
    Card Utilities (@apply)
    ========================================================================== */

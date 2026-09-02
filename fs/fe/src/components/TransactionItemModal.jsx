@@ -7,6 +7,7 @@ import { formatDate } from '../utils/format-time';
 import { useDeleteTransactionMutation } from '../hooks/useTransactionsQuery';
 import { FiArrowDownLeft, FiArrowUpRight } from 'react-icons/fi';
 import { getErrorMessage } from '../utils/get-error-message';
+import FormErrorAlert from './FormErrorAlert';
 
 export default function TransactionDetailModal({
   transaction,
@@ -143,9 +144,10 @@ export default function TransactionDetailModal({
           )}
 
           {error && (
-            <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3">
-              {error}
-            </div>
+            <FormErrorAlert
+              message={error}
+              onClose={() => setError('')}
+            />
           )}
         </div>
 

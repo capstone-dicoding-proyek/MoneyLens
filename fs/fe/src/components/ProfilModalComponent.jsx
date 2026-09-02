@@ -7,6 +7,7 @@ import { FaSpinner } from 'react-icons/fa';
 import { useUpdateProfileMutation } from '../hooks/useTransactionsQuery';
 import { IoMailOutline, IoPersonOutline } from 'react-icons/io5';
 import { getErrorMessage } from '../utils/get-error-message';
+import FormErrorAlert from './FormErrorAlert';
 
 export default function ProfilModalComponent({ onClose }) {
   const { addToast } = useToast();
@@ -84,9 +85,10 @@ export default function ProfilModalComponent({ onClose }) {
         </div>
 
         {error && (
-          <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3">
-            {error}
-          </div>
+          <FormErrorAlert
+            message={error}
+            onClose={() => setError('')}
+          />
         )}
       </div>
 

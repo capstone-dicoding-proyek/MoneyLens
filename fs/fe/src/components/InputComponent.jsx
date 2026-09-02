@@ -11,14 +11,25 @@ export default function InputComponent({
   leftIcon: LeftIcon,
   required = false,
   className = '',
+  error = '',
 }) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && <label className="input-label">{label}</label>}
 
-      <div className="relative flex items-center border-b border-slate-200 focus-within:border-[#2FA084] pb-2 transition-colors">
+      <div
+        className={`relative flex items-center border-b pb-2 transition-colors ${
+          error
+            ? 'border-rose-400 focus-within:border-rose-500'
+            : 'border-slate-200 focus-within:border-[#2FA084]'
+        }`}
+      >
         {LeftIcon && (
-          <LeftIcon className="mr-3 text-slate-400 text-lg flex-shrink-0" />
+          <LeftIcon
+            className={`mr-3 text-lg flex-shrink-0 transition-colors ${
+              error ? 'text-rose-400' : 'text-slate-400'
+            }`}
+          />
         )}
 
         <input
@@ -45,6 +56,12 @@ export default function InputComponent({
           </button>
         )}
       </div>
+
+      {error && (
+        <span className="text-[11px] font-medium text-rose-600 mt-0.5">
+          {error}
+        </span>
+      )}
     </div>
   );
 }

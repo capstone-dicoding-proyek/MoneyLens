@@ -12,6 +12,7 @@ import ModalLayoutInputAndProfil from './ModalLayoutInputAndProfil';
 import { useToast } from '../hooks/useToast';
 import { useCreateTransactionMutation } from '../hooks/useTransactionsQuery';
 import { getErrorMessage } from '../utils/get-error-message';
+import FormErrorAlert from './FormErrorAlert';
 
 const emptyItem = () => ({
   id: crypto.randomUUID(),
@@ -150,7 +151,10 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
         <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
           <button
             type="button"
-            onClick={() => setType('expense')}
+            onClick={() => {
+              setType('expense');
+              setError('');
+            }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               type === 'expense'
                 ? 'bg-white text-rose-600 shadow-xs'
@@ -162,7 +166,10 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
           </button>
           <button
             type="button"
-            onClick={() => setType('income')}
+            onClick={() => {
+              setType('income');
+              setError('');
+            }}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               type === 'income'
                 ? 'bg-white text-emerald-700 shadow-xs'
@@ -350,11 +357,12 @@ export default function InputTransactionComponent({ onClose, fetchData }) {
       </div>
 
       {/* Submit Sticky Footer */}
-      <div className="modal-footer flex-col sm:flex-row gap-3">
+      <div className="modal-footer !flex-col !items-stretch gap-3">
         {error && (
-          <div className="w-full text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-xl p-3">
-            {error}
-          </div>
+          <FormErrorAlert
+            message={error}
+            onClose={() => setError('')}
+          />
         )}
 
         <div className="w-full flex items-center justify-between">
